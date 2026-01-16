@@ -39,7 +39,7 @@ const defaultCourriers = {
                                                     question: "SOUS-MOTIF ?",
                                                     choix: [
                                                         { label: "20 - PV 659", texte: "ANV 12 SS MOTIF 20 PV 659 CPC GED DU {DATE} ET RECH EOPPS + FICOBA RECENTE", variable: { id: "DATE", question: "DATE ?" } },
-                                                        { label: "25 - ENQ PSA/ETRANG", texte: "ANV 12 SS MOTIF 25 ENQ PSA/ETRANGE GED DU {DATE} ET RECH EOPPS + FICOBA RECENTE", variable: { id: "DATE", question: "DATE ?" } }
+                                                        { label: "25 - ENQ PSA/ETRANG", texte: "ANV 12 SS MOTIF 25 ENQ PSA/ETRANG GED DU {DATE} ET RECH EOPPS + FICOBA RECENTE", variable: { id: "DATE", question: "DATE ?" } }
                                                     ]
                                                 }
                                             },
@@ -74,7 +74,17 @@ const defaultCourriers = {
                                                     ]
                                                 }
                                             },
-                                            { label: "12 - DISPARITION DU DÉBITEUR", texte: "ANV12 : RECHERCHES NEGATIVES - CONSTAT DU {DATE} - ART 659 CPC", variable: { id: "DATE", question: "DATE ?" } },
+                                            {
+                                                label: "12 - DISPARITION DU DÉBITEUR",
+                                                variable: { id: "DATE", question: "DATE ?" },
+                                                nextAfterVariable: {
+                                                    question: "MD PSA ou PV 659 ?",
+                                                    choix: [
+                                                        { label: "PV 659", texte: "ANV12 : RECHERCHES NEGATIVES - CONSTAT DU {DATE} - ART 659 CPC" },
+                                                        { label: "MD PSA", texte: "ANV12 : RECHERCHES NEGATIVES - CONSTAT DU {DATE}" }
+                                                    ]
+                                                }
+                                            },
                                             { label: "16 - CRÉANCE < SEUIL 197€", texte: "ANV 16:CREANCE<AU SEUIL - CONSTAT DU {DATE}", variable: { id: "DATE", question: "DATE ?" } }
                                         ]
                                     }
@@ -111,7 +121,7 @@ const defaultCourriers = {
                                                     question: "SOUS-MOTIF ?",
                                                     choix: [
                                                         { label: "20 - PV 659", texte: "ANV PARTIELLE 12 SS MOTIF 20 PV 659 CPC GED DU {DATE} ET RECH EOPPS + FICOBA RECENTE", variable: { id: "DATE", question: "DATE ?" } },
-                                                        { label: "25 - ENQ PSA/ETRANG", texte: "ANV PARTIELLE 12 SS MOTIF 25 ENQ PSA/ETRANGE GED DU {DATE} ET RECH EOPPS + FICOBA RECENTE", variable: { id: "DATE", question: "DATE ?" } }
+                                                        { label: "25 - ENQ PSA/ETRANG", texte: "ANV PARTIELLE 12 SS MOTIF 25 ENQ PSA/ETRANG GED DU {DATE} ET RECH EOPPS + FICOBA RECENTE", variable: { id: "DATE", question: "DATE ?" } }
                                                     ]
                                                 }
                                             },
@@ -146,7 +156,17 @@ const defaultCourriers = {
                                                     ]
                                                 }
                                             },
-                                            { label: "12 - DISPARITION DU DÉBITEUR", texte: "ANV PARTIELLE 12 : RECHERCHES NEGATIVES - CONSTAT DU {DATE} - ART 659 CPC", variable: { id: "DATE", question: "DATE ?" } },
+                                            {
+                                                label: "12 - DISPARITION DU DÉBITEUR",
+                                                variable: { id: "DATE", question: "DATE ?" },
+                                                nextAfterVariable: {
+                                                    question: "MD PSA ou PV 659 ?",
+                                                    choix: [
+                                                        { label: "PV 659", texte: "ANV PARTIELLE 12: RECHERCHES NEGATIVES CONSTAT DU {DATE} ART 659 CPC" },
+                                                        { label: "MD PSA", texte: "ANV PARTIELLE 12 : RECHERCHES NEGATIVES - CONSTAT DU {DATE}" }
+                                                    ]
+                                                }
+                                            },
                                             { label: "16 - CRÉANCE < SEUIL 197€", texte: "ANV PARTIELLE 16:CREANCE<AU SEUIL - CONSTAT DU {DATE}", variable: { id: "DATE", question: "DATE ?" } }
                                         ]
                                     }
@@ -205,7 +225,8 @@ Par ailleurs, en cas de recouvrement par voie de commissaire de justice, nous vo
         }
     },
     "RÉEXÉCUTION": {
-        "RÉEX": {
+        "RÉEXÉCUTION": {
+            displayTitle: "",
             texte: null,
             commentaire: {
                 type: "reexecution"

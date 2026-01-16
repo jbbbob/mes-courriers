@@ -22,7 +22,7 @@ themeToggle.addEventListener('click', () => {
 document.getElementById('toggle-admin').addEventListener('click', () => {
     adminMode = !adminMode;
     document.body.classList.toggle('admin-mode', adminMode);
-    document.getElementById('toggle-admin').textContent = adminMode ? 'Mode Normal' : 'Mode Admin';
+    document.getElementById('toggle-admin').textContent = adminMode ? 'MODE NORMAL' : 'MODE ADMIN';
 
     // Afficher/cacher les éléments admin
     document.querySelectorAll('.admin-actions, .edit-btn, .delete-btn').forEach(el => {
@@ -81,7 +81,17 @@ function selectCategory(category, btn) {
     const subContainer = document.getElementById('subcategories');
     subContainer.innerHTML = '';
 
-    Object.keys(courriers[category]).forEach(subcat => {
+    const subcats = Object.keys(courriers[category]);
+
+    // Si une seule sous-catégorie avec le même nom que la catégorie, sélectionner directement
+    if (subcats.length === 1 && subcats[0] === category) {
+        subContainer.innerHTML = '';
+        document.getElementById('admin-subcat-actions').classList.add('hidden');
+        selectSubcategory(category, category, null);
+        return;
+    }
+
+    subcats.forEach(subcat => {
         const wrapper = document.createElement('div');
         wrapper.className = 'subcat-wrapper';
 
@@ -129,7 +139,7 @@ function selectSubcategory(category, subcat, btn) {
     currentSubcat = subcat;
 
     document.querySelectorAll('.subcategory-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    if (btn) btn.classList.add('active');
 
     const display = document.getElementById('template-display');
     display.classList.remove('hidden');
@@ -182,6 +192,16 @@ function selectSubcategory(category, subcat, btn) {
 
     // Réafficher le bouton Copier le commentaire (au cas où il était caché par ANV SUSPEN)
     document.getElementById('copy-comment-btn').style.display = '';
+
+    // Changer le texte du bouton selon la catégorie
+    const copyCommentBtn = document.getElementById('copy-comment-btn');
+    if (category === 'ANV') {
+        copyCommentBtn.textContent = 'CRÉER LE(S) COMMENTAIRE(S)';
+    } else if (category === 'DÉLAI' || category === 'RÉEXÉCUTION') {
+        copyCommentBtn.textContent = 'CRÉER LE(S) COURRIER(S) ET LE(S) COMMENTAIRE(S)';
+    } else {
+        copyCommentBtn.textContent = 'CRÉER LE COMMENTAIRE';
+    }
 }
 
 // Modal pour les questions
@@ -424,9 +444,14 @@ function showCascadeChoice(data, isBack = false) {
                             const value = document.getElementById('cascade-var').value;
                             const texte = choix.texte.replace(`{${choix.variable.id}}`, value);
 
-                            // Si on est dans la catégorie ANV, demander ANV SUSPEN
+                            // Si on est dans la catégorie ANV, demander ANV SUSPEN (sauf si PARTIELLE)
                             if (currentCategory === 'ANV') {
-                                showAnvSuspenQuestion(texte);
+                                if (texte.includes('PARTIELLE')) {
+                                    // Pas de SUSPEN pour ANV PARTIELLE, passer directement à DRETAF
+                                    showDretafQuestion(texte, false);
+                                } else {
+                                    showAnvSuspenQuestion(texte);
+                                }
                             } else {
                                 copyToClipboard(texte, 'copy-comment-feedback');
                                 const commentText = document.getElementById('comment-text');
@@ -455,6 +480,36 @@ function showCascadeChoice(data, isBack = false) {
                         cascadeHistory = [];
                     }
                 }
+                // Si il y a une variable puis un choix après (ex: ANV 12 PL)
+                else if (choix.variable && choix.nextAfterVariable) {
+                    cascadeHistory.push({ question: choix.variable.question, choix: [], isVariable: true, parentData: data });
+
+                    const varBackBtn = `<button type="button" class="back-btn" id="cascade-back">← Retour</button>`;
+                    const varFormHTML = `
+                        <div class="form-group">
+                            <label>${choix.variable.question}</label>
+                            <input type="text" id="cascade-var" class="modal-input">
+                        </div>
+                        ${varBackBtn}
+                    `;
+                    showModal('', varFormHTML, () => {
+                        const variableValue = document.getElementById('cascade-var').value;
+                        const variableId = choix.variable.id;
+                        // Afficher les choix suivants avec la variable stockée
+                        showNextAfterVariable(choix.nextAfterVariable, variableId, variableValue);
+                    });
+
+                    setTimeout(() => {
+                        document.getElementById('cascade-var')?.focus();
+                        document.getElementById('cascade-back')?.addEventListener('click', () => {
+                            cascadeHistory.pop();
+                            const previous = cascadeHistory.pop();
+                            if (previous) {
+                                showCascadeChoice(previous, false);
+                            }
+                        });
+                    }, 100);
+                }
                 // Sinon continuer la cascade
                 else if (choix.next) {
                     showCascadeChoice(choix.next);
@@ -468,6 +523,67 @@ function showCascadeChoice(data, isBack = false) {
 function startCascade(data) {
     cascadeHistory = [];
     showCascadeChoice(data);
+}
+
+// Afficher les choix après une variable (ex: MD PSA / PV 659)
+function showNextAfterVariable(nextData, variableId, variableValue) {
+    let buttonsHTML = '';
+    nextData.choix.forEach((c, i) => {
+        buttonsHTML += `<button type="button" class="choice-btn cascade-btn" data-index="${i}">${c.label}</button>`;
+    });
+
+    const backBtn = `<button type="button" class="back-btn" id="cascade-back">← Retour</button>`;
+
+    const formHTML = `
+        <div class="form-group">
+            <label>${nextData.question}</label>
+            <div class="button-group-wrap">
+                ${buttonsHTML}
+            </div>
+        </div>
+        ${backBtn}
+    `;
+
+    showModal('', formHTML, null, true);
+
+    setTimeout(() => {
+        // Bouton retour
+        document.getElementById('cascade-back')?.addEventListener('click', () => {
+            cascadeHistory.pop();
+            const previous = cascadeHistory.pop();
+            if (previous) {
+                showCascadeChoice(previous, false);
+            }
+        });
+
+        // Boutons de choix
+        document.querySelectorAll('.cascade-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const index = parseInt(btn.dataset.index);
+                const choix = nextData.choix[index];
+
+                // Remplacer la variable dans le texte
+                const texte = choix.texte.replace(`{${variableId}}`, variableValue);
+
+                // Si on est dans la catégorie ANV, demander ANV SUSPEN (sauf si PARTIELLE)
+                if (currentCategory === 'ANV') {
+                    if (texte.includes('PARTIELLE')) {
+                        // Pas de SUSPEN pour ANV PARTIELLE, passer directement à DRETAF
+                        showDretafQuestion(texte, false);
+                    } else {
+                        showAnvSuspenQuestion(texte);
+                    }
+                } else {
+                    document.getElementById('modal').classList.add('hidden');
+                    copyToClipboard(texte, 'copy-comment-feedback');
+                    const commentText = document.getElementById('comment-text');
+                    commentText.classList.remove('hidden');
+                    commentText.textContent = texte;
+                    cascadeHistory = [];
+                }
+            });
+        });
+    }, 50);
 }
 
 // Question ANV SUSPEN après la saisie de la date
@@ -907,14 +1023,26 @@ Toute interrogation relative à l'envoi de ce mail devra être formulée par le 
         `).join('');
     }
 
+    const commentaireWatt = "Réexécution faite ce jour au CJ compétent";
+
     commentText.innerHTML = `
-        <div class="reex-result">
-            <div class="reex-images-container">
-                ${imagesHTML}
+        <div class="delai-final-page">
+            <div class="delai-category-title">TEXTE DU COURRIER</div>
+            <div class="delai-comment-block">
+                <div class="reex-images-container">
+                    ${imagesHTML}
+                </div>
+                <div class="delai-comment-text">${texteTemplateHTML.replace(/\n/g, '<br>')}</div>
+                <button type="button" class="copy-btn-small" id="copy-reex-all">COPIER</button>
+                <span class="copy-feedback-inline" id="feedback-reex"></span>
             </div>
-            <div class="reex-result-text">${texteTemplateHTML.replace(/\n/g, '<br>')}</div>
-            <button type="button" class="copy-btn-small" id="copy-reex-all">COPIER TOUT (IMAGES + TEXTE)</button>
-            <span class="copy-feedback-inline" id="feedback-reex"></span>
+
+            <div class="delai-category-title">AFFAIRE WATT - PORTAIL TI / V2</div>
+            <div class="delai-comment-block">
+                <div class="delai-comment-text">${commentaireWatt}</div>
+                <button type="button" class="copy-btn-small" id="copy-reex-watt">COPIER</button>
+                <span class="copy-feedback-inline" id="feedback-reex-watt"></span>
+            </div>
         </div>
     `;
 
@@ -998,6 +1126,15 @@ ${imagesHtml}
             // Fallback si l'API ne fonctionne pas
             copyToClipboard(texteTemplateBrut, 'feedback-reex');
         }
+    });
+
+    // Copier le commentaire WATT
+    document.getElementById('copy-reex-watt').addEventListener('click', () => {
+        navigator.clipboard.writeText(commentaireWatt).then(() => {
+            const feedback = document.getElementById('feedback-reex-watt');
+            feedback.textContent = 'COPIÉ !';
+            setTimeout(() => { feedback.textContent = ''; }, 2000);
+        });
     });
 }
 

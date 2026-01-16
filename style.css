@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
 * {
     margin: 0;
     padding: 0;
@@ -5,48 +7,50 @@
 }
 
 :root {
-    --bg-primary: #f8f9fa;
+    --bg-primary: #f0f2f5;
     --bg-secondary: #ffffff;
-    --bg-header: #1a1a2e;
-    --text-primary: #2d3436;
-    --text-secondary: #636e72;
-    --border-color: #e9ecef;
-    --accent-color: #6c5ce7;
-    --accent-hover: #5b4cdb;
-    --success-color: #00b894;
-    --success-hover: #00a381;
-    --warning-color: #fdcb6e;
-    --warning-hover: #e5b85c;
-    --danger-color: #d63031;
-    --template-bg: #f8f9fa;
-    --comment-bg: #ffeaa7;
-    --comment-border: #fdcb6e;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-}
-
-body.dark-mode {
-    --bg-primary: #0d1117;
-    --bg-secondary: #161b22;
-    --bg-header: #010409;
-    --text-primary: #e6edf3;
-    --text-secondary: #8b949e;
-    --border-color: #30363d;
-    --accent-color: #8b5cf6;
-    --accent-hover: #7c4dff;
+    --bg-header: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --text-primary: #1a1a2e;
+    --text-secondary: #4a5568;
+    --border-color: #e2e8f0;
+    --accent-color: #667eea;
+    --accent-hover: #5a67d8;
     --success-color: #10b981;
     --success-hover: #059669;
     --warning-color: #f59e0b;
     --warning-hover: #d97706;
     --danger-color: #ef4444;
-    --template-bg: #0d1117;
+    --template-bg: #f7fafc;
+    --comment-bg: #fef3c7;
+    --comment-border: #f59e0b;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 15px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 40px rgba(0,0,0,0.15);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+}
+
+body.dark-mode {
+    --bg-primary: #0f0f1a;
+    --bg-secondary: #1a1a2e;
+    --bg-header: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --border-color: #2d2d44;
+    --accent-color: #818cf8;
+    --accent-hover: #6366f1;
+    --success-color: #34d399;
+    --success-hover: #10b981;
+    --warning-color: #fbbf24;
+    --warning-hover: #f59e0b;
+    --danger-color: #f87171;
+    --template-bg: #16162a;
     --comment-bg: #2d2a1d;
-    --comment-border: #4a4528;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+    --comment-border: #92400e;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 15px rgba(0,0,0,0.5);
+    --shadow-lg: 0 10px 40px rgba(0,0,0,0.6);
 }
 
 body {
@@ -55,7 +59,7 @@ body {
     color: var(--text-primary);
     min-height: 100vh;
     transition: background-color 0.3s, color 0.3s;
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
 /* Scrollbar moderne */
@@ -93,19 +97,21 @@ body {
 header {
     background: var(--bg-header);
     color: white;
-    padding: 20px 28px;
+    padding: 24px 32px;
     border-radius: var(--radius-lg);
-    margin-bottom: 24px;
+    margin-bottom: 28px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-lg);
 }
 
 header h1 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    letter-spacing: -0.02em;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
 }
 
 .header-actions {
@@ -148,9 +154,10 @@ header h1 {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    text-align: left;
+    text-align: center;
+    font-family: 'Poppins', sans-serif;
     font-size: 0.9rem;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
     color: var(--text-primary);
@@ -183,14 +190,16 @@ header h1 {
     flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 24px;
+    justify-content: center;
 }
 
 .subcategory-btn {
-    padding: 10px 18px;
+    padding: 10px 20px;
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: 50px;
     cursor: pointer;
+    font-family: 'Poppins', sans-serif;
     font-size: 0.85rem;
     font-weight: 500;
     transition: all 0.2s;
@@ -227,6 +236,7 @@ header h1 {
 }
 
 #template-title {
+    font-family: 'Poppins', sans-serif;
     color: var(--text-primary);
     margin-bottom: 20px;
     font-size: 1.1rem;
@@ -278,6 +288,7 @@ header h1 {
 }
 
 .section h4 {
+    font-family: 'Poppins', sans-serif;
     color: var(--text-secondary);
     font-size: 0.75rem;
     text-transform: uppercase;
@@ -523,19 +534,23 @@ header h1 {
 
 /* Admin Mode */
 .admin-toggle {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.15);
     color: white;
-    border: 1px solid rgba(255,255,255,0.2);
-    padding: 10px 18px;
-    border-radius: 50px;
+    border: 2px solid rgba(255,255,255,0.3);
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
     transition: all 0.2s;
+    text-transform: uppercase;
 }
 
 .admin-toggle:hover {
-    background: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.25);
+    transform: translateY(-1px);
 }
 
 .admin-mode .admin-toggle {
@@ -659,6 +674,7 @@ header h1 {
 }
 
 .anv-category-title {
+    font-family: 'Poppins', sans-serif;
     font-size: 0.8rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -730,6 +746,7 @@ header h1 {
 }
 
 .delai-category-title {
+    font-family: 'Poppins', sans-serif;
     font-size: 0.8rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -963,6 +980,8 @@ header h1 {
     font-size: 0.9rem !important;
     font-weight: 600 !important;
     box-shadow: 0 3px 10px rgba(220, 38, 38, 0.3) !important;
+    display: block;
+    margin: 0 auto;
 }
 
 .copy-btn-comment:hover {
