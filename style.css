@@ -645,7 +645,8 @@ header h1 {
 }
 
 /* ANV SUSPEN - Page finale dans section commentaire */
-.comment-text:has(.anv-final-page) {
+.comment-text:has(.anv-final-page),
+.comment-text:has(.anv-comment-block) {
     background: transparent;
     border: none;
     padding: 0;
@@ -952,6 +953,42 @@ header h1 {
     margin-left: 50px;
 }
 
+/* Bouton Créer le commentaire - ROUGE et CARRÉ */
+.copy-btn-comment {
+    background: #dc2626 !important;
+    color: white !important;
+    border: 2px solid #991b1b !important;
+    border-radius: 0 !important;
+    padding: 10px 20px !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    box-shadow: 0 3px 10px rgba(220, 38, 38, 0.3) !important;
+}
+
+.copy-btn-comment:hover {
+    background: #b91c1c !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4) !important;
+}
+
+/* Petits boutons Copier - rouges et carrés */
+.copy-btn-small {
+    background: #dc2626 !important;
+    color: white !important;
+    border: 2px solid #991b1b !important;
+    border-radius: 0 !important;
+    padding: 8px 16px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+
+.copy-btn-small:hover {
+    background: #b91c1c !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(220, 38, 38, 0.4);
+}
+
 @media (max-width: 768px) {
     .content {
         flex-direction: column;
@@ -976,5 +1013,9 @@ header h1 {
 
     .main-content {
         padding: 20px;
+    }
+
+    .anv-big-text {
+        font-size: 1.4rem;
     }
 }

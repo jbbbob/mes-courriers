@@ -525,7 +525,25 @@ function showDretafQuestion(anvTexte, anvSuspen) {
                     // Juste copier l'ANV normal
                     document.getElementById('modal').classList.add('hidden');
                     copyToClipboard(anvTexte, 'copy-comment-feedback');
-                    document.getElementById('comment-text').textContent = anvTexte;
+                    const commentText = document.getElementById('comment-text');
+                    commentText.classList.remove('hidden');
+                    commentText.innerHTML = `
+                        <div class="anv-comment-block">
+                            <div class="anv-comment-text">${anvTexte}</div>
+                            <button type="button" class="copy-btn-small" id="copy-anv-final">Copier</button>
+                            <span class="copy-feedback-inline" id="feedback-anv-final"></span>
+                        </div>
+                    `;
+                    // Cacher le bouton "Créer le commentaire"
+                    document.getElementById('copy-comment-btn').style.display = 'none';
+                    // Ajouter l'événement sur le bouton Copier
+                    document.getElementById('copy-anv-final').addEventListener('click', () => {
+                        navigator.clipboard.writeText(anvTexte).then(() => {
+                            const feedback = document.getElementById('feedback-anv-final');
+                            feedback.textContent = 'Copié !';
+                            setTimeout(() => { feedback.textContent = ''; }, 2000);
+                        });
+                    });
                     cascadeHistory = [];
                 }
             });
