@@ -7,11 +7,11 @@ const defaultCourriers = {
             texte: null,
             commentaire: {
                 type: "cascade",
-                question: "ANV PARTIELLE ?",
+                question: "RADIÉ OU ACTIF ?",
                 isPartielleQuestion: true,
                 choix: [
                     {
-                        label: "NON",
+                        label: "RADIÉ",
                         setPartielle: false,
                         next: {
                             question: "CHOISIR LE TYPE",
@@ -93,7 +93,7 @@ const defaultCourriers = {
                         }
                     },
                     {
-                        label: "OUI",
+                        label: "ACTIF",
                         setPartielle: true,
                         next: {
                             question: "CHOISIR LE TYPE",
