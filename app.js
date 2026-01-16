@@ -3,6 +3,87 @@ let currentCategory = null;
 let currentSubcat = null;
 let adminMode = false;
 
+// Récapitulatif des choix
+let recapChoix = {};
+
+function showRecap() {
+    const panel = document.getElementById('recap-panel');
+    panel.classList.remove('hidden');
+}
+
+function hideRecap() {
+    const panel = document.getElementById('recap-panel');
+    panel.classList.add('hidden');
+    recapChoix = {};
+    document.getElementById('recap-content').innerHTML = '';
+}
+
+function updateRecap(label, value) {
+    recapChoix[label] = value;
+    renderRecap();
+}
+
+function renderRecap() {
+    const content = document.getElementById('recap-content');
+    let html = '';
+    for (const [label, value] of Object.entries(recapChoix)) {
+        html += `
+            <div class="recap-item" data-step="${label}" title="Cliquer pour recommencer">
+                <span class="recap-label">${label}</span>
+                <span class="recap-value">${value}</span>
+            </div>
+        `;
+    }
+    content.innerHTML = html;
+    showRecap();
+
+    // Ajouter les événements clic sur les items du récap pour recommencer
+    content.querySelectorAll('.recap-item').forEach(item => {
+        item.addEventListener('click', () => {
+            restartWorkflow();
+        });
+    });
+}
+
+// Recommencer le workflow actuel depuis le début
+function restartWorkflow() {
+    // Fermer le modal s'il est ouvert
+    document.getElementById('modal').classList.add('hidden');
+
+    // Réinitialiser le récap
+    recapChoix = {};
+    document.getElementById('recap-content').innerHTML = '';
+
+    // Réafficher le bouton créer commentaire
+    document.getElementById('copy-comment-btn').style.display = '';
+
+    // Cacher le texte du commentaire
+    const commentText = document.getElementById('comment-text');
+    commentText.classList.add('hidden');
+    commentText.innerHTML = '';
+
+    // Relancer le workflow selon la catégorie
+    if (currentData && currentData.commentaire) {
+        const commentaire = currentData.commentaire;
+
+        if (typeof commentaire === 'object' && commentaire.type === 'cascade') {
+            startCascade(commentaire);
+        } else if (typeof commentaire === 'object' && commentaire.type === 'reexecution') {
+            startReexecution();
+        } else if (typeof commentaire === 'object' && commentaire.type === 'delai_complet') {
+            startDelaiComplet(commentaire);
+        }
+    }
+}
+
+// Annuler et fermer tout
+function cancelAll() {
+    document.getElementById('modal').classList.add('hidden');
+    hideRecap();
+    // Réafficher le bouton créer commentaire
+    document.getElementById('copy-comment-btn').style.display = '';
+}
+
 // Thème sombre/clair
 const themeToggle = document.getElementById('toggle-theme');
 const savedTheme = localStorage.getItem('theme');
@@ -137,6 +218,7 @@ function selectCategory(category, btn) {
 function selectSubcategory(category, subcat, btn) {
     currentCategory = category;
     currentSubcat = subcat;
+    hideRecap();
 
     document.querySelectorAll('.subcategory-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
@@ -208,12 +290,22 @@ function selectSubcategory(category, subcat, btn) {
 function showModal(title, content, onConfirm, hideActions = false) {
     const modal = document.getElementById('modal');
     document.getElementById('modal-title').textContent = title;
-    document.getElementById('modal-body').innerHTML = content;
+
+    // Ajouter le bouton Annuler en bas du contenu si hideActions
+    let finalContent = content;
+    if (hideActions) {
+        finalContent += `<button type="button" class="cancel-all-btn" id="cancel-all-btn">✕ Annuler</button>`;
+    }
+    document.getElementById('modal-body').innerHTML = finalContent;
     modal.classList.remove('hidden');
 
     const actions = document.querySelector('.modal-actions');
     if (hideActions) {
         actions.classList.add('hidden');
+        // Ajouter l'événement sur le bouton Annuler
+        setTimeout(() => {
+            document.getElementById('cancel-all-btn')?.addEventListener('click', cancelAll);
+        }, 10);
     } else {
         actions.classList.remove('hidden');
         document.getElementById('modal-confirm').onclick = () => {
@@ -223,7 +315,7 @@ function showModal(title, content, onConfirm, hideActions = false) {
     }
 
     document.getElementById('modal-cancel').onclick = () => {
-        modal.classList.add('hidden');
+        cancelAll();
     };
 }
 
@@ -426,6 +518,10 @@ function showCascadeChoice(data, isBack = false) {
                 const index = parseInt(btn.dataset.index);
                 const choix = data.choix[index];
 
+                // Mettre à jour le récap avec le choix
+                const questionLabel = data.question.replace(' ?', '').replace('?', '');
+                updateRecap(questionLabel, choix.label);
+
                 // Si c'est un choix final avec texte
                 if (choix.texte) {
                     // Si il y a une variable à remplir
@@ -522,6 +618,8 @@ function showCascadeChoice(data, isBack = false) {
 // Réinitialiser l'historique au début
 function startCascade(data) {
     cascadeHistory = [];
+    hideRecap();
+    updateRecap('Catégorie', currentCategory);
     showCascadeChoice(data);
 }
 
@@ -604,6 +702,7 @@ function showAnvSuspenQuestion(anvTexte) {
         document.querySelectorAll('.choice-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const anvSuspen = btn.dataset.choice === 'oui';
+                updateRecap('ANV SUSPEN', anvSuspen ? 'Oui' : 'Non');
                 // Passer à la question DRETAF
                 showDretafQuestion(anvTexte, anvSuspen);
             });
@@ -630,6 +729,7 @@ function showDretafQuestion(anvTexte, anvSuspen) {
         document.querySelectorAll('.choice-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const dretaf = btn.dataset.choice === 'oui';
+                updateRecap('DRETAF', dretaf ? 'Oui' : 'Non');
 
                 if (dretaf) {
                     // Demander le numéro de CO
@@ -1143,6 +1243,9 @@ ${imagesHtml}
 // =====================
 
 function startDelaiComplet(data) {
+    hideRecap();
+    updateRecap('Catégorie', 'DÉLAI');
+
     // Étape 1 : Demander A/C ou PL
     const formHTML = `
         <div class="form-group">
@@ -1160,10 +1263,280 @@ function startDelaiComplet(data) {
         document.querySelectorAll('.choice-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const selectedType = btn.dataset.type;
-                delaiCompletEtape2(data, selectedType);
+                updateRecap('Type', selectedType);
+                delaiCompletEtapeDCA(data, selectedType);
             });
         });
     }, 50);
+}
+
+// Étape 1b : Demander DCA / DR TI à jour ?
+function delaiCompletEtapeDCA(data, selectedType) {
+    const formHTML = `
+        <div class="form-group">
+            <label>DCA / DR TI À JOUR ?</label>
+            <div class="button-group">
+                <button type="button" class="choice-btn" data-choice="oui">Oui</button>
+                <button type="button" class="choice-btn" data-choice="non">Non</button>
+            </div>
+        </div>
+        <button type="button" class="back-btn" id="dca-back">← Retour</button>
+    `;
+
+    showModal('', formHTML, null, true);
+
+    setTimeout(() => {
+        document.querySelectorAll('.choice-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const dcaAJour = btn.dataset.choice === 'oui';
+                updateRecap('DCA/DR à jour', dcaAJour ? 'Oui' : 'Non');
+                if (dcaAJour) {
+                    // Continue normalement
+                    delaiCompletEtape2(data, selectedType);
+                } else {
+                    // DCA pas à jour, on demande le nombre de mois
+                    delaiCompletEtapeMoisDCA(data, selectedType);
+                }
+            });
+        });
+
+        document.getElementById('dca-back')?.addEventListener('click', () => {
+            startDelaiComplet(data);
+        });
+    }, 50);
+}
+
+// Étape pour DCA non à jour : demander le nombre de mois
+function delaiCompletEtapeMoisDCA(data, selectedType) {
+    const formHTML = `
+        <div class="form-group">
+            <label>NOMBRE DE MOIS SOUHAITÉ ?</label>
+            <input type="text" id="delai-mois-dca" class="modal-input">
+        </div>
+        <button type="button" class="back-btn" id="mois-dca-back">← Retour</button>
+    `;
+
+    showModal('', formHTML, () => {
+        const nbMois = parseInt(document.getElementById('delai-mois-dca').value);
+        updateRecap('Mois', nbMois);
+
+        if (nbMois > 18) {
+            // > 18 mois : afficher le texte spécial avec ligne en gras
+            delaiCompletDCAPlus18(data, selectedType, nbMois);
+        } else {
+            // <= 18 mois : demander AE ou TI
+            delaiCompletEtapeAETI(data, selectedType, nbMois);
+        }
+    });
+
+    setTimeout(() => {
+        document.getElementById('delai-mois-dca')?.focus();
+        document.getElementById('mois-dca-back')?.addEventListener('click', () => {
+            delaiCompletEtapeDCA(data, selectedType);
+        });
+    }, 50);
+}
+
+// DCA non à jour et > 18 mois : demander AE ou TI d'abord
+function delaiCompletDCAPlus18(data, selectedType, nbMois) {
+    const formHTML = `
+        <div class="form-group">
+            <label>AE OU TI ?</label>
+            <div class="button-group">
+                <button type="button" class="choice-btn" data-choice="AE">AE</button>
+                <button type="button" class="choice-btn" data-choice="TI">TI</button>
+            </div>
+        </div>
+        <button type="button" class="back-btn" id="aeti-plus18-back">← Retour</button>
+    `;
+
+    showModal('', formHTML, null, true);
+
+    setTimeout(() => {
+        document.querySelectorAll('.choice-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const aetiType = btn.dataset.choice;
+                updateRecap('AE/TI', aetiType);
+                delaiCompletDCAPlus18Final(data, selectedType, nbMois, aetiType);
+            });
+        });
+
+        document.getElementById('aeti-plus18-back')?.addEventListener('click', () => {
+            delaiCompletEtapeMoisDCA(data, selectedType);
+        });
+    }, 50);
+}
+
+// DCA non à jour et > 18 mois : afficher résultat final
+function delaiCompletDCAPlus18Final(data, selectedType, nbMois, aetiType) {
+    document.getElementById('modal').classList.add('hidden');
+
+    const texteCourrier = `Vous sollicitez un délai de paiement sur ${nbMois} mois pour le règlement de vos cotisations sociales auprès de notre organisme.
+
+Afin d'étudier votre dossier, nous vous remercions de nous transmettre, sous quinze jours, tous les éléments ou justificatifs permettant notamment de préciser les points suivants :
+- Copie de votre dernier avis d'imposition ;
+- Dettes et/ou échéanciers en cours auprès d'autres créanciers, voire d'autres Urssaf ;
+- Récapitulatif des ressources et charges mensuelles du foyer fiscal : tableau ci-joint à renseigner ;
+- Votre demande doit être motivée et justifiée ;
+- Vos déclarations de revenus ou de chiffre d'affaires doivent être à jour ;
+- et tout autre élément que vous jugerez utile.
+
+Dans cette attente, la procédure de recouvrement n'est pas suspendue.
+
+Par ailleurs, en cas de recouvrement par voie de commissaire de justice, nous vous invitons à adresser directement votre proposition de règlement à l'étude en charge de votre dossier.`;
+
+    // Code REFUS selon A/C ou PL
+    const codeRefus = selectedType === 'A/C' ? '06' : '65';
+
+    // Ligne supplémentaire selon AE ou TI
+    const ligneSupp = aetiType === 'AE'
+        ? 'Un rappel lui a été adressé dans le courrier concernant ses DCA manquantes'
+        : 'Un rappel lui a été adressé dans le courrier concernant ses déclarations de revenus manquantes';
+
+    const commentaireTexte = `SUR PO REFUS ${codeRefus} en raison de l'absence de justificatifs concernant la demande de délai supérieure à 18 mois. Une demande de pièces complémentaires a été transmise via SCRIBE.
++
+${ligneSupp}`;
+
+    const commentText = document.getElementById('comment-text');
+    commentText.classList.remove('hidden');
+
+    const texteCourrierHTML = texteCourrier
+        .replace(/\n/g, '<br>')
+        .replace(/sous quinze jours/g, '<b>sous quinze jours</b>')
+        .replace(/Vos déclarations de revenus ou de chiffre d'affaires doivent être à jour/g, '<b>Vos déclarations de revenus ou de chiffre d\'affaires doivent être à jour</b>');
+
+    commentText.innerHTML = `
+        <div class="delai-final-page">
+            <div class="delai-category-title">Texte du courrier</div>
+            <div class="delai-comment-block">
+                <div class="delai-comment-text">${texteCourrierHTML}</div>
+                <button type="button" class="copy-btn-small" data-texte="courrier">Copier</button>
+                <span class="copy-feedback-inline" id="feedback-courrier"></span>
+            </div>
+
+            <div class="delai-category-title">AFFAIRE WATT</div>
+            <div class="delai-comment-block">
+                <div class="delai-comment-text">${commentaireTexte.replace(/\n/g, '<br>')}</div>
+                <button type="button" class="copy-btn-small" data-texte="commentaire">Copier</button>
+                <span class="copy-feedback-inline" id="feedback-commentaire"></span>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('copy-comment-btn').style.display = 'none';
+
+    const courrierHTMLFormate = `<div style="font-family: Arial, sans-serif; font-size: 11pt;">${texteCourrier
+        .replace(/\n/g, '</p><p>')
+        .replace(/sous quinze jours/g, '<b>sous quinze jours</b>')
+        .replace(/Vos déclarations de revenus ou de chiffre d'affaires doivent être à jour/g, '<b>Vos déclarations de revenus ou de chiffre d\'affaires doivent être à jour</b>')
+        .replace(/^/, '<p>')
+        .replace(/$/, '</p>')
+    }</div>`;
+
+    const textes = {
+        courrier: { plain: texteCourrier, html: courrierHTMLFormate },
+        commentaire: { plain: commentaireTexte, html: `<div style="font-family: Arial, sans-serif; font-size: 11pt;">${commentaireTexte.replace(/\n/g, '<br>')}</div>` }
+    };
+
+    commentText.querySelectorAll('.copy-btn-small').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const type = btn.dataset.texte;
+            const txtData = textes[type];
+
+            try {
+                const blobHtml = new Blob([txtData.html], { type: 'text/html' });
+                const blobText = new Blob([txtData.plain], { type: 'text/plain' });
+
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        'text/html': blobHtml,
+                        'text/plain': blobText
+                    })
+                ]);
+
+                const feedback = document.getElementById(`feedback-${type}`);
+                feedback.textContent = 'Copié !';
+                setTimeout(() => { feedback.textContent = ''; }, 2000);
+            } catch (err) {
+                navigator.clipboard.writeText(txtData.plain).then(() => {
+                    const feedback = document.getElementById(`feedback-${type}`);
+                    feedback.textContent = 'Copié !';
+                    setTimeout(() => { feedback.textContent = ''; }, 2000);
+                });
+            }
+        });
+    });
+}
+
+// DCA non à jour et <= 18 mois : demander AE ou TI
+function delaiCompletEtapeAETI(data, selectedType, nbMois) {
+    const formHTML = `
+        <div class="form-group">
+            <label>AE OU TI ?</label>
+            <div class="button-group">
+                <button type="button" class="choice-btn" data-choice="AE">AE</button>
+                <button type="button" class="choice-btn" data-choice="TI">TI</button>
+            </div>
+        </div>
+        <button type="button" class="back-btn" id="aeti-back">← Retour</button>
+    `;
+
+    showModal('', formHTML, null, true);
+
+    setTimeout(() => {
+        document.querySelectorAll('.choice-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const aetiType = btn.dataset.choice;
+                updateRecap('AE/TI', aetiType);
+                delaiCompletDCAMoins18Final(selectedType, aetiType);
+            });
+        });
+
+        document.getElementById('aeti-back')?.addEventListener('click', () => {
+            delaiCompletEtapeMoisDCA(data, selectedType);
+        });
+    }, 50);
+}
+
+// DCA non à jour et <= 18 mois : afficher juste le commentaire AFFAIRE WATT
+function delaiCompletDCAMoins18Final(selectedType, aetiType) {
+    document.getElementById('modal').classList.add('hidden');
+
+    let commentaireTexte = '';
+
+    if (aetiType === 'AE' && selectedType === 'A/C') {
+        commentaireTexte = 'SUR PO REFUS 12 en raison de DCA manquante. Une notification a été envoyée à l\'usager via SCRIBE.';
+    } else if (aetiType === 'AE' && selectedType === 'PL') {
+        commentaireTexte = 'SUR PO REFUS 67 en raison de DCA manquante. Une notification a été envoyée à l\'usager via SCRIBE.';
+    } else if (aetiType === 'TI' && selectedType === 'A/C') {
+        commentaireTexte = 'SUR PO REFUS 03 en raison de déclaration de revenu manquante. Une notification a été envoyée à l\'usager via SCRIBE.';
+    } else if (aetiType === 'TI' && selectedType === 'PL') {
+        commentaireTexte = 'SUR PO REFUS 67 en raison de déclaration de revenu manquante. Une notification a été envoyée à l\'usager via SCRIBE.';
+    }
+
+    const commentText = document.getElementById('comment-text');
+    commentText.classList.remove('hidden');
+
+    commentText.innerHTML = `
+        <div class="delai-final-page">
+            <div class="delai-category-title">AFFAIRE WATT</div>
+            <div class="delai-comment-block">
+                <div class="delai-comment-text">${commentaireTexte}</div>
+                <button type="button" class="copy-btn-small" id="copy-dca-watt">Copier</button>
+                <span class="copy-feedback-inline" id="feedback-dca-watt"></span>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('copy-comment-btn').style.display = 'none';
+
+    document.getElementById('copy-dca-watt').addEventListener('click', () => {
+        navigator.clipboard.writeText(commentaireTexte).then(() => {
+            const feedback = document.getElementById('feedback-dca-watt');
+            feedback.textContent = 'Copié !';
+            setTimeout(() => { feedback.textContent = ''; }, 2000);
+        });
+    });
 }
 
 // Étape 2 : Demander le nombre de mois
@@ -1184,7 +1557,16 @@ function delaiCompletEtape2(data, selectedType) {
         data.variables.forEach(v => {
             varValues[v.id] = document.getElementById(`delai-var-${v.id}`).value;
         });
-        delaiCompletEtape3(data, selectedType, varValues);
+
+        updateRecap('Mois', varValues.MOIS);
+
+        // Vérifier si le nombre de mois est > 36
+        const nbMois = parseInt(varValues.MOIS);
+        if (nbMois > 36) {
+            delaiCompletRefus36(data, selectedType, varValues);
+        } else {
+            delaiCompletEtape3(data, selectedType, varValues);
+        }
     });
 
     setTimeout(() => {
@@ -1195,6 +1577,106 @@ function delaiCompletEtape2(data, selectedType) {
             startDelaiComplet(data);
         });
     }, 100);
+}
+
+// Refus si > 36 mois
+function delaiCompletRefus36(data, selectedType, varValues) {
+    document.getElementById('modal').classList.add('hidden');
+
+    const nbMois = varValues.MOIS;
+
+    const texteRefus = `Vous sollicitez un délai de paiement sur ${nbMois} mois pour le règlement de vos cotisations sociales auprès de notre organisme.
+
+Nous ne pouvons pas donner une suite favorable à votre demande, en effet, la durée des échéanciers ne peut pas excéder 36 mois.
+
+Pour nous permettre d'étudier votre situation afin d'obtenir un éventuel accord en 36 échéances, nous vous remercions de nous transmettre, sous quinze jours, tous les éléments ou justificatifs permettant notamment de préciser les points suivants :
+- Copie de votre dernier avis d'imposition ;
+- Dettes et/ou échéanciers en cours auprès d'autres créanciers, voire d'autres Urssaf ;
+- Récapitulatif des ressources et charges mensuelles du foyer fiscal : tableau ci-joint à renseigner ;
+- Votre demande doit être motivée et justifiée ;
+- et tout autre élément que vous jugerez utile.
+
+Dans cette attente, la procédure de recouvrement n'est pas suspendue.
+
+Par ailleurs, en cas de recouvrement par voie de commissaire de justice, nous vous invitons à adresser directement votre proposition de règlement à l'étude en charge de votre dossier.`;
+
+    // Récupérer le commentaire selon le type (on garde 18 mois dans le commentaire)
+    const commentaireTexte = data.commentaires[selectedType].normal;
+
+    // Afficher dans la section commentaire
+    const commentText = document.getElementById('comment-text');
+    commentText.classList.remove('hidden');
+
+    // Mettre "sous quinze jours" en gras pour l'affichage
+    const texteRefusHTML = texteRefus
+        .replace(/\n/g, '<br>')
+        .replace(/sous quinze jours/g, '<b>sous quinze jours</b>');
+
+    commentText.innerHTML = `
+        <div class="delai-final-page">
+            <div class="delai-category-title">Texte du courrier</div>
+            <div class="delai-comment-block">
+                <div class="delai-comment-text">${texteRefusHTML}</div>
+                <button type="button" class="copy-btn-small" data-texte="courrier">Copier</button>
+                <span class="copy-feedback-inline" id="feedback-courrier"></span>
+            </div>
+
+            <div class="delai-category-title">AFFAIRE WATT</div>
+            <div class="delai-comment-block">
+                <div class="delai-comment-text">${commentaireTexte}</div>
+                <button type="button" class="copy-btn-small" data-texte="commentaire">Copier</button>
+                <span class="copy-feedback-inline" id="feedback-commentaire"></span>
+            </div>
+        </div>
+    `;
+
+    // Cacher le bouton "Créer le commentaire"
+    document.getElementById('copy-comment-btn').style.display = 'none';
+
+    // Créer le HTML formaté pour le courrier (pour coller dans Word/Outlook)
+    const courrierHTMLFormate = `<div style="font-family: Arial, sans-serif; font-size: 11pt;">${texteRefus
+        .replace(/\n/g, '</p><p>')
+        .replace(/sous quinze jours/g, '<b>sous quinze jours</b>')
+        .replace(/^/, '<p>')
+        .replace(/$/, '</p>')
+    }</div>`;
+
+    // Stocker les textes pour la copie
+    const textes = {
+        courrier: { plain: texteRefus, html: courrierHTMLFormate },
+        commentaire: { plain: commentaireTexte, html: `<div style="font-family: Arial, sans-serif; font-size: 11pt;">${commentaireTexte}</div>` }
+    };
+
+    // Ajouter les événements sur les boutons Copier
+    commentText.querySelectorAll('.copy-btn-small').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const type = btn.dataset.texte;
+            const data = textes[type];
+
+            try {
+                const blobHtml = new Blob([data.html], { type: 'text/html' });
+                const blobText = new Blob([data.plain], { type: 'text/plain' });
+
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        'text/html': blobHtml,
+                        'text/plain': blobText
+                    })
+                ]);
+
+                const feedback = document.getElementById(`feedback-${type}`);
+                feedback.textContent = 'Copié !';
+                setTimeout(() => { feedback.textContent = ''; }, 2000);
+            } catch (err) {
+                // Fallback si l'API ne fonctionne pas
+                navigator.clipboard.writeText(data.plain).then(() => {
+                    const feedback = document.getElementById(`feedback-${type}`);
+                    feedback.textContent = 'Copié !';
+                    setTimeout(() => { feedback.textContent = ''; }, 2000);
+                });
+            }
+        });
+    });
 }
 
 // Étape 3 : Demander + de 50 000€
@@ -1216,6 +1698,7 @@ function delaiCompletEtape3(data, selectedType, varValues) {
         document.querySelectorAll('.choice-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const is50kPlus = btn.dataset.choice === 'oui';
+                updateRecap('+50 000€', is50kPlus ? 'Oui' : 'Non');
                 delaiCompletFinal(data, selectedType, varValues, is50kPlus);
             });
         });
