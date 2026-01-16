@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MES COURRIERS</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>MES MODÈLES DE COURRIERS</h1>
+            <div class="header-actions">
+                <button id="toggle-theme" class="theme-toggle" title="Changer le thème">🌙</button>
+                <button id="toggle-admin" class="admin-toggle">Mode Admin</button>
+            </div>
+        </header>
+
+        <div class="content">
+            <nav class="sidebar">
+                <div id="categories"></div>
+                <div id="admin-cat-actions" class="admin-actions hidden">
+                    <button onclick="addCategory()" class="admin-btn add-btn">+ Nouvelle catégorie</button>
+                </div>
+            </nav>
+
+            <main class="main-content">
+                <div id="subcategories" class="subcategories">
+                    <p class="placeholder">Sélectionnez une catégorie</p>
+                </div>
+                <div id="admin-subcat-actions" class="admin-actions hidden"></div>
+
+                <div id="template-display" class="template-display hidden">
+                    <h3 id="template-title"></h3>
+
+                    <div id="texte-section" class="section">
+                        <h4>Texte du courrier <button id="edit-texte-btn" class="edit-btn hidden">Modifier</button></h4>
+                        <div id="template-text" class="template-text"></div>
+                        <button id="copy-btn" class="copy-btn">COPIER LE TEXTE</button>
+                        <span id="copy-feedback" class="copy-feedback"></span>
+                    </div>
+
+                    <div id="comment-section" class="section hidden">
+                        <h4 id="comment-header" class="hidden">Commentaire <button id="edit-comment-btn" class="edit-btn hidden">Modifier</button></h4>
+                        <div id="comment-text" class="comment-text hidden"></div>
+                        <button id="copy-comment-btn" class="copy-btn copy-btn-comment">CRÉER LE COMMENTAIRE</button>
+                        <span id="copy-comment-feedback" class="copy-feedback"></span>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <h3 id="modal-title"></h3>
+            <div id="modal-body"></div>
+            <div class="modal-actions">
+                <button id="modal-cancel" class="modal-btn modal-btn-cancel">Annuler</button>
+                <button id="modal-confirm" class="modal-btn modal-btn-confirm">Valider</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
