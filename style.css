@@ -1148,6 +1148,247 @@ header h1 {
     box-shadow: 0 3px 10px rgba(220, 38, 38, 0.4);
 }
 
+/* Interface tout-en-un */
+.tout-en-un-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Enlever le fond du comment-text quand il contient tout-en-un */
+.comment-text:has(.tout-en-un-container) {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+.tout-en-un-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s;
+}
+
+.tout-en-un-row.tout-en-un-validate-row {
+    background: transparent;
+    border: none;
+    justify-content: center;
+    padding: 8px 0;
+}
+
+.tout-en-un-label {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-width: 120px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.tout-en-un-buttons {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+}
+
+.tout-en-un-buttons-wrap {
+    flex-wrap: wrap;
+}
+
+.tout-en-un-buttons-wrap .tout-en-un-btn {
+    min-width: auto;
+    flex: 0 0 auto;
+    font-size: 0.85rem;
+    padding: 10px 16px;
+}
+
+.tout-en-un-btn {
+    padding: 12px 24px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-primary);
+    min-width: 80px;
+    text-align: center;
+}
+
+.tout-en-un-btn:hover {
+    border-color: var(--accent-color);
+    background: rgba(108, 92, 231, 0.1);
+}
+
+/* Bouton sélectionné = VERT */
+.tout-en-un-btn.selected {
+    background: var(--success-color) !important;
+    border-color: var(--success-color) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+/* Bouton focalisé mais pas sélectionné = contour violet */
+.tout-en-un-btn.focused:not(.selected) {
+    outline: 3px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* Boutons non-sélectionnés dans une ligne complétée = GRIS */
+.tout-en-un-row.has-selection .tout-en-un-btn:not(.selected) {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+    color: #9ca3af;
+    opacity: 0.7;
+}
+
+body.dark-mode .tout-en-un-row.has-selection .tout-en-un-btn:not(.selected) {
+    background: #374151;
+    border-color: #4b5563;
+    color: #6b7280;
+}
+
+/* Input tout-en-un */
+.tout-en-un-input {
+    padding: 12px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    min-width: 150px;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.tout-en-un-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15);
+}
+
+.tout-en-un-input.focused {
+    outline: 3px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* Bouton VALIDER = ROUGE */
+.tout-en-un-validate {
+    padding: 14px 40px;
+    background: #dc2626;
+    border: 2px solid #991b1b;
+    border-radius: 0;
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 0 3px 10px rgba(220, 38, 38, 0.3);
+}
+
+.tout-en-un-validate:hover {
+    background: #b91c1c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+}
+
+.tout-en-un-validate.focused {
+    outline: 3px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* Bouton copier focalisé */
+.copy-btn-small.focused {
+    outline: 3px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* Résultat en temps réel */
+.tout-en-un-result {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.tout-en-un-result-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--warning-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--warning-color);
+}
+
+.result-section {
+    background: var(--comment-bg);
+    border: none;
+    border-left: 3px solid var(--warning-color);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+}
+
+.result-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-color);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent-color);
+}
+
+.result-content {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    white-space: pre-wrap;
+}
+
+.result-section .copy-btn-small {
+    margin-top: 8px;
+}
+
+/* Éléments individuels dans une section de résultat */
+.result-item {
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+}
+
+.result-item:last-child {
+    margin-bottom: 0;
+}
+
+body.dark-mode .result-item {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.result-item .result-content {
+    margin-bottom: 8px;
+}
+
+.result-item .copy-btn-small {
+    margin-top: 0;
+}
+
 @media (max-width: 768px) {
     .content {
         flex-direction: column;
@@ -1176,5 +1417,19 @@ header h1 {
 
     .anv-big-text {
         font-size: 1.4rem;
+    }
+
+    .tout-en-un-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .tout-en-un-label {
+        min-width: auto;
+    }
+
+    .tout-en-un-buttons {
+        flex-wrap: wrap;
     }
 }

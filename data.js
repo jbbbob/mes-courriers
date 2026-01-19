@@ -78,7 +78,7 @@ const defaultCourriers = {
                                                 label: "12 - DISPARITION DU DÉBITEUR",
                                                 variable: { id: "DATE", question: "DATE ?" },
                                                 nextAfterVariable: {
-                                                    question: "MD PSA ou PV 659 ?",
+                                                    question: "SOUS-MOTIF ?",
                                                     choix: [
                                                         { label: "PV 659", texte: "ANV12 : RECHERCHES NEGATIVES - CONSTAT DU {DATE} - ART 659 CPC" },
                                                         { label: "MD PSA", texte: "ANV12 : RECHERCHES NEGATIVES - CONSTAT DU {DATE}" }
@@ -160,7 +160,7 @@ const defaultCourriers = {
                                                 label: "12 - DISPARITION DU DÉBITEUR",
                                                 variable: { id: "DATE", question: "DATE ?" },
                                                 nextAfterVariable: {
-                                                    question: "MD PSA ou PV 659 ?",
+                                                    question: "SOUS-MOTIF ?",
                                                     choix: [
                                                         { label: "PV 659", texte: "ANV PARTIELLE 12: RECHERCHES NEGATIVES CONSTAT DU {DATE} ART 659 CPC" },
                                                         { label: "MD PSA", texte: "ANV PARTIELLE 12 : RECHERCHES NEGATIVES - CONSTAT DU {DATE}" }
@@ -179,7 +179,7 @@ const defaultCourriers = {
         }
     },
     "DÉLAI": {
-        "REFUS + DE 18 MOIS": {
+        "REFUS - PAS DE PJ": {
             texte: null,
             commentaire: {
                 type: "delai_complet",
@@ -221,6 +221,47 @@ Par ailleurs, en cas de recouvrement par voie de commissaire de justice, nous vo
                         plus50k: `SUR PO REFUS 65 en raison de l'absence de justificatifs concernant la demande de délai avec une dette supérieur à 50 000€. Une demande de pièces complémentaires a été transmise via SCRIBE.`
                     }
                 }
+            }
+        },
+        "REFUS - DCA/DR MANQUANTE": {
+            texte: null,
+            commentaire: {
+                type: "delai_dca",
+                question: "TYPE ?",
+                choix: [
+                    {
+                        label: "A/C",
+                        next: {
+                            question: "AE OU TI ?",
+                            choix: [
+                                { label: "AE", texte: "SUR PO REFUS 12 en raison de ses DCA manquantes. Une notification a été envoyée à l'usager via SCRIBE." },
+                                { label: "TI", texte: "SUR PO REFUS 03 en raison de ses déclarations de revenus manquantes. Une notification a été envoyée à l'usager via SCRIBE." }
+                            ]
+                        }
+                    },
+                    {
+                        label: "PL",
+                        next: {
+                            question: "AE OU TI ?",
+                            choix: [
+                                { label: "AE", texte: "SUR PO REFUS 67 en raison de ses DCA manquantes. Une notification a été envoyée à l'usager via SCRIBE." },
+                                { label: "TI", texte: "SUR PO REFUS 67 en raison de ses déclarations de revenus manquantes. Une notification a été envoyée à l'usager via SCRIBE." }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "DÉLAI AVEC CO EN COURS": {
+            texte: null,
+            commentaire: {
+                type: "delai_co",
+                question: "CO EN COURS SUR LA TOTALITÉ DE LA DETTE ?",
+                texteOui: `Nous vous informons que nous ne pouvons pas donner une suite favorable à votre demande de délai.
+
+En effet, la totalité de votre dette fait actuellement l'objet d'une procédure de recouvrement forcé.
+
+Nous vous invitons à prendre contact dans les plus brefs délais avec l'étude d'huissier en charge de votre dossier (tél : {TEL_CJ}, mail : {MAIL_CJ}), afin de convenir d'un échéancier et d'éviter l'application de frais supplémentaires.`
             }
         }
     },
