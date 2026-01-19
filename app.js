@@ -1429,7 +1429,7 @@ ${ligneSupp}`;
     if (!texteCourrier && !commentaireTexte) return null;
 
     // Objet pour les demandes d'échéancier
-    const objet = `demande d'échéancier sur ${moisDisplay} mois.`;
+    const objet = `demande d'échéancier sur ${moisDisplay} mois`;
 
     return buildResultHTML(texteCourrier, commentaireTexte, objet);
 }
@@ -2295,7 +2295,7 @@ function renderDelaiCo() {
         html += `<div class="tout-en-un-result">`;
 
         // Section OBJET
-        const objetText = `demande d'échéancier sur ${coState.mois || '...'} mois.`;
+        const objetText = `demande d'échéancier sur ${coState.mois || '...'} mois`;
         html += `
             <div class="delai-category-title">OBJET</div>
             <div class="delai-comment-block">
@@ -2401,7 +2401,7 @@ function copyCoResult(type) {
     let feedbackId = '';
 
     if (type === 'objet') {
-        textToCopy = `demande d'échéancier sur ${coState.mois || '...'} mois.`;
+        textToCopy = `demande d'échéancier sur ${coState.mois || '...'} mois`;
         feedbackId = 'feedback-co-objet';
     } else if (type === 'courrier') {
         textToCopy = result.courrier;
@@ -2780,7 +2780,7 @@ function updateCoResult() {
         if (blocks[0]) {
             const objetText = blocks[0].querySelector('.delai-comment-text');
             if (objetText) {
-                objetText.innerHTML = `demande d'échéancier sur ${coState.mois || '...'} mois.`;
+                objetText.innerHTML = `demande d'échéancier sur ${coState.mois || '...'} mois`;
             }
         }
 
