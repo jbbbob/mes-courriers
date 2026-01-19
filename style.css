@@ -1433,3 +1433,105 @@ body.dark-mode .result-item {
         flex-wrap: wrap;
     }
 }
+
+/* Styles RÉEXÉCUTION tout-en-un */
+.reex-paste-zone-inline {
+    background: var(--bg-primary);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.reex-paste-zone-inline:hover,
+.reex-paste-zone-inline:focus {
+    border-color: var(--accent-color);
+    background: rgba(108, 92, 231, 0.05);
+    outline: none;
+}
+
+.reex-paste-zone-inline.focused {
+    border-color: var(--accent-color);
+    background: rgba(108, 92, 231, 0.1);
+    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+}
+
+.reex-images-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: 12px;
+}
+
+.reex-image-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--success-color);
+    color: white;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.reex-remove-img {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.reex-remove-img:hover {
+    background: rgba(255,255,255,0.4);
+}
+
+.reex-no-img {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.tout-en-un-textarea {
+    width: 100%;
+    min-width: 300px;
+    padding: 10px 14px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    font-size: 0.9rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: all 0.2s;
+    -webkit-text-fill-color: var(--text-primary);
+}
+
+.tout-en-un-textarea::placeholder {
+    color: var(--text-secondary);
+    -webkit-text-fill-color: var(--text-secondary);
+}
+
+.tout-en-un-textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+}
+
+.tout-en-un-textarea.focused {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+}
