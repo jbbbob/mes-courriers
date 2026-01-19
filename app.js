@@ -3,6 +3,15 @@ let currentCategory = null;
 let currentSubcat = null;
 let adminMode = false;
 
+// Fonction pour échapper les caractères HTML (évite que < soit interprété comme balise)
+function escapeHtml(text) {
+    if (!text) return text;
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
 // Récapitulatif des choix
 let recapChoix = {};
 
@@ -538,7 +547,8 @@ let reexPasteHandler = null;
 // État global pour RÉEXÉCUTION
 let reexState = {
     date: '',
-    adresse: ''
+    adresse: '',
+    instruction: 'DEFAUT'
 };
 
 // Navigation clavier RÉEXÉCUTION
@@ -552,7 +562,7 @@ let reexFocus = {
 function startReexecution() {
     // Réinitialiser l'état
     reexImages = [];
-    reexState = { date: '', adresse: '' };
+    reexState = { date: '', adresse: '', instruction: 'DEFAUT' };
     reexFocus = { rowIndex: 0, btnIndex: 0, inResults: false, resultIndex: 0 };
 
     // Cacher le modal s'il est ouvert
@@ -622,6 +632,18 @@ function renderReexToutEnUn() {
     `;
     rowIndex++;
 
+    // Ligne 4: INSTRUCTION CJ
+    html += `
+        <div class="tout-en-un-row has-selection" data-row="${rowIndex}">
+            <div class="tout-en-un-label">INSTRUCTION CJ</div>
+            <div class="tout-en-un-buttons">
+                <button type="button" class="tout-en-un-btn ${reexState.instruction === 'DEFAUT' ? 'selected' : ''}" data-field="instruction" data-value="DEFAUT">DEFAUT</button>
+                <button type="button" class="tout-en-un-btn ${reexState.instruction === 'S ATT' ? 'selected' : ''}" data-field="instruction" data-value="S ATT">S ATT</button>
+            </div>
+        </div>
+    `;
+    rowIndex++;
+
     html += `</div>`;
 
     // Résultats
@@ -642,6 +664,11 @@ function getReexResultHTML() {
     const date = reexState.date;
     const adresse = reexState.adresse;
 
+    // Phrase d'instruction selon le choix
+    const phraseInstruction = reexState.instruction === 'S ATT'
+        ? "Sans réaction de sa part, nous vous invitons à procéder à une saisie-attribution."
+        : "Sans réaction de sa part, nous vous invitons à reprendre les poursuites selon nos instructions.";
+
     // Texte HTML formaté pour l'affichage
     const texteTemplateHTML = `<span class="reex-label">Date limite avant prescription :</span> <span class="reex-date">${date || '...'}</span>
 
@@ -653,7 +680,7 @@ Nous vous adressons ce jour un titre exécutoire ainsi que les actes déjà dél
 
 A réception du ou des dossiers, nous vous demandons donc de prendre contact avec le cotisant pour une proposition d'échéancier.
 
-Sans réaction de sa part, nous vous invitons à reprendre les poursuites selon nos instructions.
+${phraseInstruction}
 
 <b>Adresse :
 ${adresse || '...'}</b>
@@ -771,6 +798,17 @@ function setupReexEvents() {
         });
     }
 
+    // Boutons INSTRUCTION CJ
+    document.querySelectorAll('#tout-en-un-reex .tout-en-un-btn[data-field="instruction"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const value = btn.dataset.value;
+            if (reexState.instruction !== value) {
+                reexState.instruction = value;
+                renderReexToutEnUn();
+            }
+        });
+    });
+
     // Copier les images individuellement au clic
     document.querySelectorAll('.reex-image-block').forEach(block => {
         block.addEventListener('click', async () => {
@@ -874,6 +912,11 @@ async function copyReexAll() {
     const date = reexState.date || '';
     const adresse = reexState.adresse || '';
 
+    // Phrase d'instruction selon le choix
+    const phraseInstruction = reexState.instruction === 'S ATT'
+        ? "Sans réaction de sa part, nous vous invitons à procéder à une saisie-attribution."
+        : "Sans réaction de sa part, nous vous invitons à reprendre les poursuites selon nos instructions.";
+
     const texteTemplateBrut = `Date limite avant prescription : ${date}
 
 Transmission de titres exécutoires
@@ -884,7 +927,7 @@ Nous vous adressons ce jour un titre exécutoire ainsi que les actes déjà dél
 
 A réception du ou des dossiers, nous vous demandons donc de prendre contact avec le cotisant pour une proposition d'échéancier.
 
-Sans réaction de sa part, nous vous invitons à reprendre les poursuites selon nos instructions.
+${phraseInstruction}
 
 Adresse :
 ${adresse}
@@ -920,7 +963,7 @@ ${imagesHtml}
 <p>Cher(s) Maître(s),</p>
 <p>Nous vous adressons ce jour un titre exécutoire ainsi que les actes déjà délivrés dans le(s) dossier(s) référencé(s) ci-dessus dans le cadre de la réexécution, pour lesquels il convient de procéder à une relance amiable.</p>
 <p>A réception du ou des dossiers, nous vous demandons donc de prendre contact avec le cotisant pour une proposition d'échéancier.</p>
-<p>Sans réaction de sa part, nous vous invitons à reprendre les poursuites selon nos instructions.</p>
+<p>${phraseInstruction}</p>
 <p><b>Adresse :<br>${adresse.replace(/\n/g, '<br>')}</b></p>
 <p><b><u>IMPORTANT - PROCESSUS DE RÉEXÉCUTION PAR EDI - INSTRUCTIONS À SUIVRE</u></b></p>
 <p>Nous vous adressons en pièces jointes :<br>
@@ -1325,17 +1368,17 @@ function renderDelaiToutEnUn(data) {
 
 // Calculer le résultat DÉLAI en temps réel
 function getDelaiResult(data) {
-    if (!toutEnUnState.type || !toutEnUnState.dca || !toutEnUnState.mois) return null;
+    if (!toutEnUnState.type || !toutEnUnState.dca) return null;
 
-    const nbMois = parseInt(toutEnUnState.mois);
-    if (isNaN(nbMois)) return null;
+    const nbMois = parseInt(toutEnUnState.mois) || 0;
+    const moisDisplay = toutEnUnState.mois || '...';
 
     let texteCourrier = null;
     let commentaireTexte = null;
 
     // Cas > 36 mois
     if (nbMois > 36) {
-        texteCourrier = `Vous sollicitez un délai de paiement sur ${toutEnUnState.mois} mois pour le règlement de vos cotisations sociales auprès de notre organisme.
+        texteCourrier = `Vous sollicitez un délai de paiement sur ${moisDisplay} mois pour le règlement de vos cotisations sociales auprès de notre organisme.
 
 Nous ne pouvons pas donner une suite favorable à votre demande, en effet, la durée des échéanciers ne peut pas excéder 36 mois.
 
@@ -1351,10 +1394,9 @@ Dans cette attente, la procédure de recouvrement n'est pas suspendue.
 Par ailleurs, en cas de recouvrement par voie de commissaire de justice, nous vous invitons à adresser directement votre proposition de règlement à l'étude en charge de votre dossier.`;
         commentaireTexte = data.commentaires[toutEnUnState.type].normal;
     }
-    // Cas DCA = Non
+    // Cas DCA = Non (toujours afficher le courrier demandant les PJ, peu importe le nombre de mois)
     else if (toutEnUnState.dca === 'non' && toutEnUnState.aeti) {
-        if (nbMois > 18) {
-            texteCourrier = `Vous sollicitez un délai de paiement sur ${nbMois} mois pour le règlement de vos cotisations sociales auprès de notre organisme.
+        texteCourrier = `Vous sollicitez un délai de paiement sur ${moisDisplay} mois pour le règlement de vos cotisations sociales auprès de notre organisme.
 
 Afin d'étudier votre dossier, nous vous remercions de nous transmettre, sous quinze jours, tous les éléments ou justificatifs permettant notamment de préciser les points suivants :
 - Copie de votre dernier avis d'imposition ;
@@ -1368,42 +1410,45 @@ Dans cette attente, la procédure de recouvrement n'est pas suspendue.
 
 Par ailleurs, en cas de recouvrement par voie de commissaire de justice, nous vous invitons à adresser directement votre proposition de règlement à l'étude en charge de votre dossier.`;
 
-            const codeRefus = toutEnUnState.type === 'A/C' ? '06' : '65';
-            const ligneSupp = toutEnUnState.aeti === 'AE'
-                ? 'Un rappel lui a été adressé dans le courrier concernant ses DCA manquantes'
-                : 'Un rappel lui a été adressé dans le courrier concernant ses déclarations de revenus manquantes';
-            commentaireTexte = `SUR PO REFUS ${codeRefus} en raison de l'absence de justificatifs concernant la demande de délai supérieure à 18 mois. Une demande de pièces complémentaires a été transmise via SCRIBE.
+        const codeRefus = toutEnUnState.type === 'A/C' ? '06' : '65';
+        const ligneSupp = toutEnUnState.aeti === 'AE'
+            ? 'Un rappel lui a été adressé dans le courrier concernant ses DCA manquantes'
+            : 'Un rappel lui a été adressé dans le courrier concernant ses déclarations de revenus manquantes';
+        commentaireTexte = `SUR PO REFUS ${codeRefus} en raison de l'absence de justificatifs. Une demande de pièces complémentaires a été transmise via SCRIBE.
 +
 ${ligneSupp}`;
-        } else {
-            // DCA non à jour et <= 18 mois
-            if (toutEnUnState.aeti === 'AE' && toutEnUnState.type === 'A/C') {
-                commentaireTexte = 'SUR PO REFUS 12 en raison de DCA manquante. Une notification a été envoyée à l\'usager via SCRIBE.';
-            } else if (toutEnUnState.aeti === 'AE' && toutEnUnState.type === 'PL') {
-                commentaireTexte = 'SUR PO REFUS 67 en raison de DCA manquante. Une notification a été envoyée à l\'usager via SCRIBE.';
-            } else if (toutEnUnState.aeti === 'TI' && toutEnUnState.type === 'A/C') {
-                commentaireTexte = 'SUR PO REFUS 03 en raison de déclaration de revenu manquante. Une notification a été envoyée à l\'usager via SCRIBE.';
-            } else if (toutEnUnState.aeti === 'TI' && toutEnUnState.type === 'PL') {
-                commentaireTexte = 'SUR PO REFUS 67 en raison de déclaration de revenu manquante. Une notification a été envoyée à l\'usager via SCRIBE.';
-            }
-        }
     }
     // Cas normal (DCA = Oui)
     else if (toutEnUnState.dca === 'oui' && toutEnUnState.plus50k) {
         const is50kPlus = toutEnUnState.plus50k === 'oui';
         texteCourrier = is50kPlus ? data.texteOui : data.texteNon;
-        texteCourrier = texteCourrier.replace(/\{MOIS\}/g, toutEnUnState.mois);
+        texteCourrier = texteCourrier.replace(/\{MOIS\}/g, moisDisplay);
         commentaireTexte = is50kPlus ? data.commentaires[toutEnUnState.type].plus50k : data.commentaires[toutEnUnState.type].normal;
     }
 
     if (!texteCourrier && !commentaireTexte) return null;
 
-    return buildResultHTML(texteCourrier, commentaireTexte);
+    // Objet pour les demandes d'échéancier
+    const objet = `demande d'échéancier sur ${moisDisplay} mois.`;
+
+    return buildResultHTML(texteCourrier, commentaireTexte, objet);
 }
 
 // Construire le HTML du résultat
-function buildResultHTML(texteCourrier, commentaireTexte) {
+function buildResultHTML(texteCourrier, commentaireTexte, objet) {
     let html = '';
+
+    // Section OBJET (si présent)
+    if (objet) {
+        html += `
+            <div class="result-section">
+                <div class="result-title">OBJET</div>
+                <div class="result-content">${objet}</div>
+                <button type="button" class="copy-btn-small" onclick="copyResultText('objet')">Copier</button>
+                <span class="copy-feedback-inline" id="feedback-objet"></span>
+            </div>
+        `;
+    }
 
     if (texteCourrier) {
         const texteCourrierHTML = texteCourrier
@@ -1435,7 +1480,8 @@ function buildResultHTML(texteCourrier, commentaireTexte) {
     // Stocker les textes pour la copie
     window.resultTextes = {
         courrier: texteCourrier,
-        commentaire: commentaireTexte
+        commentaire: commentaireTexte,
+        objet: objet
     };
 
     return html;
@@ -2095,6 +2141,9 @@ function handleDcaResultsNav(e) {
 
 let coState = {
     totalite: null,  // OUI ou NON
+    ribPresent: null, // OUI ou NON (pour le cas NON)
+    mois: '',
+    echeance: '',
     telCj: '',
     mailCj: ''
 };
@@ -2102,7 +2151,7 @@ let coData = null;
 let coFocus = { rowIndex: 0, btnIndex: 0, inResults: false, resultIndex: 0 };
 
 function startDelaiCo(data) {
-    coState = { totalite: null, telCj: '', mailCj: '' };
+    coState = { totalite: null, ribPresent: null, mois: '', echeance: '', telCj: '', mailCj: '' };
     coFocus = { rowIndex: 0, btnIndex: 0, inResults: false, resultIndex: 0 };
     coData = data;
 
@@ -2139,8 +2188,19 @@ function renderDelaiCo() {
     `;
     rowIndex++;
 
-    // Si OUI : afficher TEL CJ et MAIL CJ
+    // Si OUI : afficher MOIS, TEL CJ et MAIL CJ
     if (coState.totalite === 'OUI') {
+        // Ligne MOIS
+        html += `
+            <div class="tout-en-un-row" data-row="${rowIndex}">
+                <div class="tout-en-un-label">MOIS</div>
+                <div class="tout-en-un-buttons">
+                    <input type="text" class="tout-en-un-input" id="tout-en-un-mois" value="${coState.mois}" placeholder="Ex: 12">
+                </div>
+            </div>
+        `;
+        rowIndex++;
+
         // Ligne TEL CJ
         html += `
             <div class="tout-en-un-row" data-row="${rowIndex}">
@@ -2164,22 +2224,107 @@ function renderDelaiCo() {
         rowIndex++;
     }
 
+    // Si NON : afficher RIB PRÉSENT puis les 4 champs
+    if (coState.totalite === 'NON') {
+        // Ligne RIB PRÉSENT
+        const ribHasSelection = coState.ribPresent !== null;
+        html += `
+            <div class="tout-en-un-row ${ribHasSelection ? 'has-selection' : ''}" data-row="${rowIndex}">
+                <div class="tout-en-un-label">RIB PRÉSENT</div>
+                <div class="tout-en-un-buttons">
+                    <button type="button" class="tout-en-un-btn ${coState.ribPresent === 'OUI' ? 'selected' : ''}" data-field="ribPresent" data-value="OUI">OUI</button>
+                    <button type="button" class="tout-en-un-btn ${coState.ribPresent === 'NON' ? 'selected' : ''}" data-field="ribPresent" data-value="NON">NON</button>
+                </div>
+            </div>
+        `;
+        rowIndex++;
+
+        // Si RIB PRÉSENT sélectionné (OUI ou NON), afficher les 4 champs
+        if (coState.ribPresent !== null) {
+            // Ligne MOIS
+            html += `
+                <div class="tout-en-un-row" data-row="${rowIndex}">
+                    <div class="tout-en-un-label">MOIS</div>
+                    <div class="tout-en-un-buttons">
+                        <input type="text" class="tout-en-un-input" id="tout-en-un-mois" value="${coState.mois}" placeholder="Ex: 12">
+                    </div>
+                </div>
+            `;
+            rowIndex++;
+
+            // Ligne 1ÈRE ÉCHÉANCE
+            html += `
+                <div class="tout-en-un-row" data-row="${rowIndex}">
+                    <div class="tout-en-un-label">1ÈRE ÉCHÉANCE</div>
+                    <div class="tout-en-un-buttons">
+                        <input type="text" class="tout-en-un-input" id="tout-en-un-echeance" value="${coState.echeance}" placeholder="Ex: 15/02/2025">
+                    </div>
+                </div>
+            `;
+            rowIndex++;
+
+            // Ligne TEL CJ
+            html += `
+                <div class="tout-en-un-row" data-row="${rowIndex}">
+                    <div class="tout-en-un-label">TEL CJ</div>
+                    <div class="tout-en-un-buttons">
+                        <input type="text" class="tout-en-un-input" id="tout-en-un-tel-cj" value="${coState.telCj}" placeholder="Ex: 01 23 45 67 89">
+                    </div>
+                </div>
+            `;
+            rowIndex++;
+
+            // Ligne MAIL CJ
+            html += `
+                <div class="tout-en-un-row" data-row="${rowIndex}">
+                    <div class="tout-en-un-label">MAIL CJ</div>
+                    <div class="tout-en-un-buttons">
+                        <input type="text" class="tout-en-un-input" id="tout-en-un-mail-cj" value="${coState.mailCj}" placeholder="Ex: contact@huissier.fr">
+                    </div>
+                </div>
+            `;
+            rowIndex++;
+        }
+    }
+
     html += `</div>`;
 
     // Résultat
     const result = getCoResult();
     if (result) {
+        html += `<div class="tout-en-un-result">`;
+
+        // Section OBJET
+        const objetText = `demande d'échéancier sur ${coState.mois || '...'} mois.`;
         html += `
-            <div class="tout-en-un-result">
-                <div class="tout-en-un-result-title">RÉSULTAT</div>
-                <div class="result-section">
-                    <div class="result-item">
-                        <div class="result-content">${result.replace(/\n/g, '<br>')}</div>
-                        <button type="button" class="copy-btn-small" onclick="copyCoResult()">Copier</button>
-                        <span class="copy-feedback-inline" id="feedback-co"></span>
-                    </div>
-                </div>
+            <div class="delai-category-title">OBJET</div>
+            <div class="delai-comment-block">
+                <div class="delai-comment-text">${objetText}</div>
+                <button type="button" class="copy-btn-small" id="copy-co-objet">Copier</button>
+                <span class="copy-feedback-inline" id="feedback-co-objet"></span>
             </div>`;
+
+        // Section TEXTE DU COURRIER
+        html += `
+            <div class="delai-category-title">TEXTE DU COURRIER</div>
+            <div class="delai-comment-block">
+                <div class="delai-comment-text">${result.courrier.replace(/\n/g, '<br>')}</div>
+                <button type="button" class="copy-btn-small" id="copy-co-courrier">Copier</button>
+                <span class="copy-feedback-inline" id="feedback-co-courrier"></span>
+            </div>`;
+
+        // Section AFFAIRE WATT (si applicable)
+        if (result.watt) {
+            html += `
+            <div class="delai-category-title">AFFAIRE WATT</div>
+            <div class="delai-comment-block">
+                <div class="delai-comment-text">${result.watt.replace(/\n/g, '<br>')}</div>
+                <button type="button" class="copy-btn-small" id="copy-co-watt">Copier</button>
+                <span class="copy-feedback-inline" id="feedback-co-watt"></span>
+            </div>`;
+        }
+
+        html += `</div>`;
     }
 
     commentText.innerHTML = html;
@@ -2188,20 +2333,87 @@ function renderDelaiCo() {
 }
 
 function getCoResult() {
-    if (coState.totalite !== 'OUI') return null;
+    // Cas OUI (totalité)
+    if (coState.totalite === 'OUI') {
+        let texte = coData.texteOui;
+        texte = texte.replace('{TEL_CJ}', coState.telCj || '');
+        texte = texte.replace('{MAIL_CJ}', coState.mailCj || '');
 
-    let texte = coData.texteOui;
-    texte = texte.replace('{TEL_CJ}', coState.telCj || '');
-    texte = texte.replace('{MAIL_CJ}', coState.mailCj || '');
+        const watt = `Courrier envoyé informant l'usager que la totalité de sa dette a été transmise à l'étude d'huissier, et qu'il doit désormais prendre contact avec celle-ci pour convenir d'un échéancier.`;
 
-    return texte;
+        return { courrier: texte, watt: watt };
+    }
+
+    // Cas NON (pas totalité) - besoin de RIB PRÉSENT
+    if (coState.totalite === 'NON' && coState.ribPresent !== null) {
+        let courrier;
+        let watt = null;
+
+        if (coState.ribPresent === 'OUI') {
+            courrier = `Vous avez sollicité la mise en place d'un échéancier en ${coState.mois || '...'} mensualités pour le règlement de votre dette.
+
+Nous vous informons que ce délai de paiement a été accordé pour la partie en recouvrement amiable, avec une première échéance prévue le ${coState.echeance || '...'}.
+
+Une notification distincte vous sera adressée, précisant les montants et les dates de règlement de chaque échéance.
+
+En revanche, pour la partie actuellement en recouvrement forcé, nous vous invitons à contacter directement l'étude d'huissier en charge de votre dossier (tél : ${coState.telCj || '...'} , mail : ${coState.mailCj || '...'}) afin de convenir d'un éventuel échéancier et d'éviter l'application de frais supplémentaires.`;
+
+            // AFFAIRE WATT selon le nombre de mois
+            const moisNum = parseInt(coState.mois) || 0;
+            const poType = moisNum > 5 ? 'PO PR' : 'PO APPROB';
+
+            watt = `Délai fait sur la partie amiable + Courrier envoyé informant l'usager qu'une partie de sa dette a été transmise à l'étude d'huissier, et qu'il doit désormais prendre contact avec celle-ci pour convenir d'un échéancier.
+SUR ${poType}
+${coState.mois || '...'}+1 échéances
+à partir de ${coState.echeance || '...'}`;
+
+        } else {
+            // RIB NON
+            courrier = `Vous avez sollicité la mise en place d'un échéancier en ${coState.mois || '...'} mensualités pour le règlement de votre dette.
+
+Nous vous informons que ce délai de paiement a été accordé pour la partie en recouvrement amiable, avec une première échéance prévue le ${coState.echeance || '...'}.
+
+Une notification séparée vous sera adressée, précisant l'échéancier accordé ainsi que le mandat de prélèvement à nous retourner.
+Nous vous rappelons que, votre demande étant supérieure à 5 mois, l'accord de l'échéancier est conditionné au retour de ce mandat. Sans ce document, l'échéancier sera annulé.
+
+En revanche, pour la partie actuellement en recouvrement forcé, nous vous invitons à contacter directement l'étude d'huissier en charge de votre dossier (tél : ${coState.telCj || '...'} , mail : ${coState.mailCj || '...'}) afin de convenir d'un éventuel échéancier et d'éviter l'application de frais supplémentaires.`;
+
+            // AFFAIRE WATT pour RIB NON
+            watt = `EN ATTENTE MANDAT
+
+Délai fait sur la partie amiable + Courrier envoyé informant l'usager qu'une partie de sa dette a été transmise à l'étude d'huissier, et qu'il doit désormais prendre contact avec celle-ci pour convenir d'un échéancier.
+SUR PO PRO PR
+${coState.mois || '...'}+1 échéances
+à partir de ${coState.echeance || '...'}`;
+        }
+
+        return { courrier, watt };
+    }
+
+    return null;
 }
 
-function copyCoResult() {
+function copyCoResult(type) {
     const result = getCoResult();
-    if (result) {
-        navigator.clipboard.writeText(result).then(() => {
-            const feedback = document.getElementById('feedback-co');
+    if (!result) return;
+
+    let textToCopy = '';
+    let feedbackId = '';
+
+    if (type === 'objet') {
+        textToCopy = `demande d'échéancier sur ${coState.mois || '...'} mois.`;
+        feedbackId = 'feedback-co-objet';
+    } else if (type === 'courrier') {
+        textToCopy = result.courrier;
+        feedbackId = 'feedback-co-courrier';
+    } else if (type === 'watt') {
+        textToCopy = result.watt;
+        feedbackId = 'feedback-co-watt';
+    }
+
+    if (textToCopy) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            const feedback = document.getElementById(feedbackId);
             if (feedback) {
                 feedback.textContent = 'Copié !';
                 setTimeout(() => { feedback.textContent = ''; }, 2000);
@@ -2264,8 +2476,20 @@ function setupDelaiCoEvents() {
 
             coState[field] = value;
 
-            if (field === 'totalite' && value === 'OUI') {
+            if (field === 'totalite') {
+                // Réinitialiser les champs si on change de totalite
+                coState.ribPresent = null;
+                coState.mois = '';
+                coState.echeance = '';
+                coState.telCj = '';
+                coState.mailCj = '';
                 coFocus.rowIndex = 1;
+                coFocus.btnIndex = 0;
+            }
+
+            if (field === 'ribPresent') {
+                // Avancer vers MOIS
+                coFocus.rowIndex = 2;
                 coFocus.btnIndex = 0;
             }
 
@@ -2274,6 +2498,52 @@ function setupDelaiCoEvents() {
     });
 
     // Événements sur les inputs
+    const moisInput = document.getElementById('tout-en-un-mois');
+    if (moisInput) {
+        moisInput.addEventListener('input', (e) => {
+            coState.mois = e.target.value;
+            updateCoResult();
+        });
+        moisInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                moisInput.blur();
+                coFocus.rowIndex = 3;
+                coFocus.btnIndex = 0;
+                applyDelaiCoFocus();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                moisInput.blur();
+                coFocus.rowIndex = 1;
+                coFocus.btnIndex = 0;
+                applyDelaiCoFocus();
+            }
+        });
+    }
+
+    const echeanceInput = document.getElementById('tout-en-un-echeance');
+    if (echeanceInput) {
+        echeanceInput.addEventListener('input', (e) => {
+            coState.echeance = e.target.value;
+            updateCoResult();
+        });
+        echeanceInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                echeanceInput.blur();
+                coFocus.rowIndex = 4;
+                coFocus.btnIndex = 0;
+                applyDelaiCoFocus();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                echeanceInput.blur();
+                coFocus.rowIndex = 2;
+                coFocus.btnIndex = 0;
+                applyDelaiCoFocus();
+            }
+        });
+    }
+
     const telInput = document.getElementById('tout-en-un-tel-cj');
     if (telInput) {
         telInput.addEventListener('input', (e) => {
@@ -2284,13 +2554,27 @@ function setupDelaiCoEvents() {
             if (e.key === 'Enter' || e.key === 'ArrowDown') {
                 e.preventDefault();
                 telInput.blur();
-                coFocus.rowIndex = 2;
+                // Trouver l'index de la ligne MAIL CJ
+                const rows = document.querySelectorAll('#tout-en-un-co .tout-en-un-row');
+                for (let i = 0; i < rows.length; i++) {
+                    if (rows[i].querySelector('#tout-en-un-mail-cj')) {
+                        coFocus.rowIndex = i;
+                        break;
+                    }
+                }
                 coFocus.btnIndex = 0;
                 applyDelaiCoFocus();
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 telInput.blur();
-                coFocus.rowIndex = 0;
+                // Trouver l'index de la ligne précédente
+                const rows = document.querySelectorAll('#tout-en-un-co .tout-en-un-row');
+                for (let i = 0; i < rows.length; i++) {
+                    if (rows[i].querySelector('#tout-en-un-tel-cj')) {
+                        coFocus.rowIndex = Math.max(0, i - 1);
+                        break;
+                    }
+                }
                 coFocus.btnIndex = 0;
                 applyDelaiCoFocus();
             }
@@ -2314,11 +2598,34 @@ function setupDelaiCoEvents() {
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 mailInput.blur();
-                coFocus.rowIndex = 1;
+                // Trouver l'index de la ligne TEL CJ
+                const rows = document.querySelectorAll('#tout-en-un-co .tout-en-un-row');
+                for (let i = 0; i < rows.length; i++) {
+                    if (rows[i].querySelector('#tout-en-un-tel-cj')) {
+                        coFocus.rowIndex = i;
+                        break;
+                    }
+                }
                 coFocus.btnIndex = 0;
                 applyDelaiCoFocus();
             }
         });
+    }
+
+    // Boutons de copie
+    const copyObjetBtn = document.getElementById('copy-co-objet');
+    if (copyObjetBtn) {
+        copyObjetBtn.addEventListener('click', () => copyCoResult('objet'));
+    }
+
+    const copyCourrierBtn = document.getElementById('copy-co-courrier');
+    if (copyCourrierBtn) {
+        copyCourrierBtn.addEventListener('click', () => copyCoResult('courrier'));
+    }
+
+    const copyWattBtn = document.getElementById('copy-co-watt');
+    if (copyWattBtn) {
+        copyWattBtn.addEventListener('click', () => copyCoResult('watt'));
     }
 
     // Retirer ancien handler
@@ -2463,14 +2770,38 @@ function handleCoResultsNav(e) {
 
 function updateCoResult() {
     const resultContainer = document.querySelector('.tout-en-un-result');
-    if (!resultContainer) return;
-
     const result = getCoResult();
-    if (result) {
-        const resultContent = resultContainer.querySelector('.result-content');
-        if (resultContent) {
-            resultContent.innerHTML = result.replace(/\n/g, '<br>');
+
+    if (result && resultContainer) {
+        // Mettre à jour les contenus (OBJET, COURRIER, WATT)
+        const blocks = resultContainer.querySelectorAll('.delai-comment-block');
+
+        // Block 0 = OBJET
+        if (blocks[0]) {
+            const objetText = blocks[0].querySelector('.delai-comment-text');
+            if (objetText) {
+                objetText.innerHTML = `demande d'échéancier sur ${coState.mois || '...'} mois.`;
+            }
         }
+
+        // Block 1 = COURRIER
+        if (blocks[1]) {
+            const courrierText = blocks[1].querySelector('.delai-comment-text');
+            if (courrierText) {
+                courrierText.innerHTML = result.courrier.replace(/\n/g, '<br>');
+            }
+        }
+
+        // Block 2 = WATT si présent
+        if (result.watt && blocks[2]) {
+            const wattText = blocks[2].querySelector('.delai-comment-text');
+            if (wattText) {
+                wattText.innerHTML = result.watt.replace(/\n/g, '<br>');
+            }
+        }
+    } else if (result && !resultContainer) {
+        // Si le résultat n'existe pas encore, re-rendre
+        renderDelaiCo();
     }
 }
 
@@ -2837,9 +3168,13 @@ function renderAnvToutEnUn() {
 
     // Ligne DATE (après sous-motif si pas nextAfterVariable)
     const anvChoixSelected = anvChoixAnv.find(c => c.label === anvState.anv);
+    // Afficher DATE si:
+    // 1. Il y a des sous-motifs à afficher, OU
+    // 2. L'ANV sélectionné a un texte direct avec variable (comme ANV 16)
+    const hasDirectTextWithVariable = anvChoixSelected && anvChoixSelected.texte && anvChoixSelected.variable && !anvChoixSelected.next;
     const needsDateAfterSousMotif = !hasNextAfterVar && anvState.anv && (
         anvChoixSousMotif.length > 0 ||  // Afficher dès que SOUS-MOTIF apparaît
-        (anvChoixSelected && anvChoixSelected.texte && anvChoixSelected.variable)
+        hasDirectTextWithVariable        // OU texte direct avec variable (ANV 16)
     );
 
     // Afficher DATE, SUSPEN, DRETAF dès qu'on a choisi le sous-motif (ou l'ANV direct)
@@ -2944,13 +3279,18 @@ function buildAnvResultHTML(anvTexte, suspenTexte, dretafTexte) {
     if (dretafTexte) combinedParts.push(dretafTexte);
     const combinedTexte = combinedParts.join('\n+\n');
 
-    // Stocker pour la copie
+    // Stocker pour la copie (texte original sans échappement)
     window.resultTextes = {
         anv: anvTexte,
         suspen: suspenTexte,
         dretaf: dretafTexte,
         combined: combinedTexte
     };
+
+    // Échapper les textes pour l'affichage HTML (évite que < soit interprété comme balise)
+    const anvTexteDisplay = escapeHtml(anvTexte);
+    const suspenTexteDisplay = escapeHtml(suspenTexte);
+    const dretafTexteDisplay = escapeHtml(dretafTexte);
 
     let html = '';
 
@@ -2959,7 +3299,7 @@ function buildAnvResultHTML(anvTexte, suspenTexte, dretafTexte) {
         <div class="result-title">PORTAIL TI / V2</div>
 
         <div class="result-item">
-            <div class="result-content">${anvTexte}</div>
+            <div class="result-content">${anvTexteDisplay}</div>
             <button type="button" class="copy-btn-small" onclick="copyResultText('anv')">Copier</button>
             <span class="copy-feedback-inline" id="feedback-anv"></span>
         </div>`;
@@ -2967,7 +3307,7 @@ function buildAnvResultHTML(anvTexte, suspenTexte, dretafTexte) {
     if (dretafTexte) {
         html += `
         <div class="result-item">
-            <div class="result-content">${dretafTexte}</div>
+            <div class="result-content">${dretafTexteDisplay}</div>
             <button type="button" class="copy-btn-small" onclick="copyResultText('dretaf')">Copier</button>
             <span class="copy-feedback-inline" id="feedback-dretaf"></span>
         </div>`;
@@ -2976,7 +3316,7 @@ function buildAnvResultHTML(anvTexte, suspenTexte, dretafTexte) {
     if (suspenTexte) {
         html += `
         <div class="result-item">
-            <div class="result-content">${suspenTexte}</div>
+            <div class="result-content">${suspenTexteDisplay}</div>
             <button type="button" class="copy-btn-small" onclick="copyResultText('suspen')">Copier</button>
             <span class="copy-feedback-inline" id="feedback-suspen"></span>
         </div>`;
@@ -2985,9 +3325,9 @@ function buildAnvResultHTML(anvTexte, suspenTexte, dretafTexte) {
     html += `</div>`;
 
     // Section Affaire WATT (combiné ANV + SUSPEN + DRETAF)
-    let combinedDisplay = anvTexte;
-    if (suspenTexte) combinedDisplay += '<br>+<br>' + suspenTexte;
-    if (dretafTexte) combinedDisplay += '<br>+<br>' + dretafTexte;
+    let combinedDisplay = anvTexteDisplay;
+    if (suspenTexte) combinedDisplay += '<br>+<br>' + suspenTexteDisplay;
+    if (dretafTexte) combinedDisplay += '<br>+<br>' + dretafTexteDisplay;
 
     html += `<div class="result-section">
         <div class="result-title">AFFAIRE WATT</div>
