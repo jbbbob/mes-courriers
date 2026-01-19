@@ -915,7 +915,7 @@ Toute interrogation relative à l'envoi de ce mail devra être formulée par le 
     const htmlFormatted = `
 <div style="font-family: Calibri, sans-serif; font-size: 11.5pt;">
 ${imagesHtml}
-<p><b>Date limite avant prescription :</b> <b style="color:#dc2626">${date}</b></p>
+<p><b>Date limite avant prescription :</b> <font color="red"><b>${date}</b></font></p>
 <p><b><u>Transmission de titres exécutoires</u></b></p>
 <p>Cher(s) Maître(s),</p>
 <p>Nous vous adressons ce jour un titre exécutoire ainsi que les actes déjà délivrés dans le(s) dossier(s) référencé(s) ci-dessus dans le cadre de la réexécution, pour lesquels il convient de procéder à une relance amiable.</p>
