@@ -871,8 +871,8 @@ function setupReexResultEvents() {
 
 // Copier tout le contenu RÉEXÉCUTION
 async function copyReexAll() {
-    const date = reexState.date;
-    const adresse = reexState.adresse;
+    const date = reexState.date || '';
+    const adresse = reexState.adresse || '';
 
     const texteTemplateBrut = `Date limite avant prescription : ${date}
 
@@ -905,15 +905,14 @@ Une relance par EDI vous sera adressée si vous n'avez pas retourné son AR : Co
 
 Toute interrogation relative à l'envoi de ce mail devra être formulée par le biais du portail Partenaires.`;
 
-    try {
-        // Construire le HTML des images
-        let imagesHtml = '';
-        if (reexImages.length > 0) {
-            imagesHtml = reexImages.map(img => `<p><img src="${img}" style="max-width:100%;"></p>`).join('');
-        }
+    // Construire le HTML des images
+    let imagesHtml = '';
+    if (reexImages.length > 0) {
+        imagesHtml = reexImages.map(img => `<p><img src="${img}" style="max-width:100%;"></p>`).join('');
+    }
 
-        // HTML formaté pour coller dans Word/Outlook
-        const htmlFormatted = `
+    // HTML formaté pour coller dans Word/Outlook
+    const htmlFormatted = `
 <div style="font-family: Calibri, sans-serif; font-size: 11.5pt;">
 ${imagesHtml}
 <p><b>Date limite avant prescription :</b> <b style="color:#dc2626">${date}</b></p>
@@ -942,6 +941,7 @@ ${imagesHtml}
 </div>
 `;
 
+    try {
         const blobHtml = new Blob([htmlFormatted], { type: 'text/html' });
         const blobText = new Blob([texteTemplateBrut], { type: 'text/plain' });
 
@@ -956,7 +956,32 @@ ${imagesHtml}
         feedback.textContent = 'COPIÉ !';
         setTimeout(() => { feedback.textContent = ''; }, 2000);
     } catch (err) {
-        copyToClipboard(texteTemplateBrut, 'feedback-reex');
+        console.error('Erreur copie HTML:', err);
+        // Fallback: essayer avec execCommand
+        try {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlFormatted;
+            tempDiv.style.position = 'absolute';
+            tempDiv.style.left = '-9999px';
+            document.body.appendChild(tempDiv);
+
+            const range = document.createRange();
+            range.selectNodeContents(tempDiv);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            document.execCommand('copy');
+            selection.removeAllRanges();
+            document.body.removeChild(tempDiv);
+
+            const feedback = document.getElementById('feedback-reex');
+            feedback.textContent = 'COPIÉ !';
+            setTimeout(() => { feedback.textContent = ''; }, 2000);
+        } catch (err2) {
+            console.error('Erreur copie fallback:', err2);
+            copyToClipboard(texteTemplateBrut, 'feedback-reex');
+        }
     }
 }
 
