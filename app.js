@@ -941,45 +941,52 @@ ${imagesHtml}
 </div>
 `;
 
+    // Méthode execCommand - plus fiable pour le formatage HTML
     try {
-        const blobHtml = new Blob([htmlFormatted], { type: 'text/html' });
-        const blobText = new Blob([texteTemplateBrut], { type: 'text/plain' });
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlFormatted;
+        tempDiv.style.position = 'fixed';
+        tempDiv.style.left = '-9999px';
+        tempDiv.style.top = '0';
+        tempDiv.style.opacity = '0';
+        document.body.appendChild(tempDiv);
 
-        await navigator.clipboard.write([
-            new ClipboardItem({
-                'text/html': blobHtml,
-                'text/plain': blobText
-            })
-        ]);
+        const range = document.createRange();
+        range.selectNodeContents(tempDiv);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
 
-        const feedback = document.getElementById('feedback-reex');
-        feedback.textContent = 'COPIÉ !';
-        setTimeout(() => { feedback.textContent = ''; }, 2000);
+        const success = document.execCommand('copy');
+        selection.removeAllRanges();
+        document.body.removeChild(tempDiv);
+
+        if (success) {
+            const feedback = document.getElementById('feedback-reex');
+            feedback.textContent = 'COPIÉ !';
+            setTimeout(() => { feedback.textContent = ''; }, 2000);
+        } else {
+            throw new Error('execCommand failed');
+        }
     } catch (err) {
-        console.error('Erreur copie HTML:', err);
-        // Fallback: essayer avec execCommand
+        console.error('Erreur copie execCommand:', err);
+        // Fallback: ClipboardItem API
         try {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = htmlFormatted;
-            tempDiv.style.position = 'absolute';
-            tempDiv.style.left = '-9999px';
-            document.body.appendChild(tempDiv);
+            const blobHtml = new Blob([htmlFormatted], { type: 'text/html' });
+            const blobText = new Blob([texteTemplateBrut], { type: 'text/plain' });
 
-            const range = document.createRange();
-            range.selectNodeContents(tempDiv);
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-
-            document.execCommand('copy');
-            selection.removeAllRanges();
-            document.body.removeChild(tempDiv);
+            await navigator.clipboard.write([
+                new ClipboardItem({
+                    'text/html': blobHtml,
+                    'text/plain': blobText
+                })
+            ]);
 
             const feedback = document.getElementById('feedback-reex');
             feedback.textContent = 'COPIÉ !';
             setTimeout(() => { feedback.textContent = ''; }, 2000);
         } catch (err2) {
-            console.error('Erreur copie fallback:', err2);
+            console.error('Erreur copie ClipboardItem:', err2);
             copyToClipboard(texteTemplateBrut, 'feedback-reex');
         }
     }
