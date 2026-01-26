@@ -1254,6 +1254,32 @@ body.dark-mode .tout-en-un-row.has-selection .tout-en-un-btn:not(.selected) {
     color: #6b7280;
 }
 
+/* Bouton NON EXIGIBLE */
+.non-exigible-btn {
+    background: #f59e0b !important;
+    border-color: #d97706 !important;
+    color: white !important;
+    font-weight: 700;
+}
+
+.non-exigible-btn:hover {
+    background: #d97706 !important;
+    border-color: #b45309 !important;
+}
+
+/* Bouton VERSEMENTS RÉCENT */
+.versements-btn {
+    background: #10b981 !important;
+    border-color: #059669 !important;
+    color: white !important;
+    font-weight: 700;
+}
+
+.versements-btn:hover {
+    background: #059669 !important;
+    border-color: #047857 !important;
+}
+
 /* Input tout-en-un */
 .tout-en-un-input {
     padding: 12px 16px;
@@ -1277,6 +1303,17 @@ body.dark-mode .tout-en-un-row.has-selection .tout-en-un-btn:not(.selected) {
 .tout-en-un-input.focused {
     outline: 3px solid var(--accent-color);
     outline-offset: 2px;
+}
+
+/* Container pour inputs multiples */
+.multi-inputs-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.multi-inputs-container .multi-input {
+    width: 100%;
 }
 
 /* Bouton VALIDER = ROUGE */

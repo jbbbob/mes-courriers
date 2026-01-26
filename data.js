@@ -50,7 +50,7 @@ const defaultCourriers = {
                                                 next: {
                                                     question: "SOUS-MOTIF ?",
                                                     choix: [
-                                                        { label: "32 - PAS DE PJ", texte: "ANV 16 SS MOTIF 32 - PAS DE PJ" }
+                                                        { label: "32 - PAS DE PJ", texte: "ANV 16 SS MOTIF 32 - CONSTAT DU {DATE}", variable: { id: "DATE", question: "DATE ?" } }
                                                     ]
                                                 }
                                             }
@@ -68,8 +68,8 @@ const defaultCourriers = {
                                                     question: "SOUS-MOTIF ?",
                                                     choix: [
                                                         { label: "PV DE CARENCE", texte: "ANV 11: CARENCE-CONSTAT DU {DATE} - PV DE CARENCE", variable: { id: "DATE", question: "DATE ?" } },
-                                                        { label: "S ATT NÉGATIVE", texte: "ANV 11: CARENCE-CONSTAT DU {DATE} - SAISIE ATTRIBUTION INOPERANTE", variable: { id: "DATE", question: "DATE ?" } },
-                                                        { label: "CERTIFICAT D'IRRÉCOUVRABILITÉ", texte: "ANV 11 : CARENCE-CONSTAT DU {DATE} -CERTIF IRRECOUV.", variable: { id: "DATE", question: "DATE ?" } },
+                                                        { label: "S ATT NÉGATIVE", texte: "ANV 11: CARENCE-CONSTAT DU {DATE} - S ATT NEGATIVE", variable: { id: "DATE", question: "DATE ?" } },
+                                                        { label: "CERTIFICAT D'IRRÉCOUVRABILITÉ", texte: "ANV 11: CARENCE-CONSTAT DU {DATE} - CERTIF IRRECOUV.", variable: { id: "DATE", question: "DATE ?" } },
                                                         { label: "FICOBA NÉGATIF", texte: "ANV 11: CARENCE-CONSTAT DU {DATE} - FICOBA NEGATIF", variable: { id: "DATE", question: "DATE ?" } }
                                                     ]
                                                 }
@@ -132,7 +132,7 @@ const defaultCourriers = {
                                                 next: {
                                                     question: "SOUS-MOTIF ?",
                                                     choix: [
-                                                        { label: "32 - PAS DE PJ", texte: "ANV PARTIELLE 16 SS MOTIF 32 - PAS DE PJ" }
+                                                        { label: "32 - PAS DE PJ", texte: "ANV PARTIELLE 16 SS MOTIF 32 - CONSTAT DU {DATE}", variable: { id: "DATE", question: "DATE ?" } }
                                                     ]
                                                 }
                                             }
@@ -150,8 +150,8 @@ const defaultCourriers = {
                                                     question: "SOUS-MOTIF ?",
                                                     choix: [
                                                         { label: "PV DE CARENCE", texte: "ANV PARTIELLE 11: CARENCE-CONSTAT DU {DATE} - PV DE CARENCE", variable: { id: "DATE", question: "DATE ?" } },
-                                                        { label: "S ATT NÉGATIVE", texte: "ANV PARTIELLE 11: CARENCE-CONSTAT DU {DATE} - SAISIE ATTRIBUTION INOPERANTE", variable: { id: "DATE", question: "DATE ?" } },
-                                                        { label: "CERTIFICAT D'IRRÉCOUVRABILITÉ", texte: "ANV PARTIELLE 11 : CARENCE-CONSTAT DU {DATE} -CERTIF IRRECOUV.", variable: { id: "DATE", question: "DATE ?" } },
+                                                        { label: "S ATT NÉGATIVE", texte: "ANV PARTIELLE 11: CARENCE-CONSTAT DU {DATE} - S ATT NEGATIVE", variable: { id: "DATE", question: "DATE ?" } },
+                                                        { label: "CERTIFICAT D'IRRÉCOUVRABILITÉ", texte: "ANV PARTIELLE 11: CARENCE-CONSTAT DU {DATE} - CERTIF IRRECOUV.", variable: { id: "DATE", question: "DATE ?" } },
                                                         { label: "FICOBA NÉGATIF", texte: "ANV PARTIELLE 11: CARENCE-CONSTAT DU {DATE} - FICOBA NEGATIF", variable: { id: "DATE", question: "DATE ?" } }
                                                     ]
                                                 }
@@ -262,6 +262,12 @@ Par ailleurs, en cas de recouvrement par voie de commissaire de justice, nous vo
 En effet, la totalité de votre dette fait actuellement l'objet d'une procédure de recouvrement forcé.
 
 Nous vous invitons à prendre contact dans les plus brefs délais avec l'étude d'huissier en charge de votre dossier (tél : {TEL_CJ}, mail : {MAIL_CJ}), afin de convenir d'un échéancier et d'éviter l'application de frais supplémentaires.`
+            }
+        },
+        "SOUMISSION": {
+            texte: null,
+            commentaire: {
+                type: "delai_soumission"
             }
         }
     },
