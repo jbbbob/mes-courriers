@@ -82,6 +82,7 @@ function renderReexToutEnUn() {
             <div class="tout-en-un-buttons">
                 <button type="button" class="tout-en-un-btn ${reexState.instruction === 'DEFAUT' ? 'selected' : ''}" data-field="instruction" data-value="DEFAUT">DEFAUT</button>
                 <button type="button" class="tout-en-un-btn ${reexState.instruction === 'S ATT' ? 'selected' : ''}" data-field="instruction" data-value="S ATT">S ATT</button>
+                <button type="button" class="tout-en-un-btn ${reexState.instruction === 'COM' ? 'selected' : ''}" data-field="instruction" data-value="COM">COM</button>
             </div>
         </div>
     `;
@@ -107,10 +108,21 @@ function getReexResultHTML() {
     const date = reexState.date;
     const adresse = reexState.adresse;
 
-    // Phrase d'instruction selon le choix
+    // Paragraphe principal et instructions selon le choix
+    const isCOM = reexState.instruction === 'COM';
+    const phraseCorps = isCOM
+        ? "Nous vous adressons ce jour un titre exécutoire ainsi que les actes déjà délivrés dans le(s) dossier(s) référencé(s) ci-dessus dans le cadre de la réexécution, pour lesquels il convient de procéder à un commandement de payer afin d'interrompre la prescription."
+        : "Nous vous adressons ce jour un titre exécutoire ainsi que les actes déjà délivrés dans le(s) dossier(s) référencé(s) ci-dessus dans le cadre de la réexécution, pour lesquels il convient de procéder à une relance amiable.";
+
     const phraseInstruction = reexState.instruction === 'S ATT'
         ? "Sans réaction de sa part, nous vous invitons à procéder à une saisie-attribution."
         : "Sans réaction de sa part, nous vous invitons à reprendre les poursuites selon nos instructions.";
+
+    const blocEcheancier = isCOM ? '' : `
+
+A réception du ou des dossiers, nous vous demandons donc de prendre contact avec le cotisant pour une proposition d'échéancier.
+
+${phraseInstruction}`;
 
     // Texte HTML formaté pour l'affichage
     const texteTemplateHTML = `<span class="reex-label">Date limite avant prescription :</span> <span class="reex-date">${date || '...'}</span>
@@ -119,11 +131,7 @@ function getReexResultHTML() {
 
 Cher(s) Maître(s),
 
-Nous vous adressons ce jour un titre exécutoire ainsi que les actes déjà délivrés dans le(s) dossier(s) référencé(s) ci-dessus dans le cadre de la réexécution, pour lesquels il convient de procéder à une relance amiable.
-
-A réception du ou des dossiers, nous vous demandons donc de prendre contact avec le cotisant pour une proposition d'échéancier.
-
-${phraseInstruction}
+${phraseCorps}${blocEcheancier}
 
 <b>Adresse :
 ${adresse || '...'}</b>
@@ -355,10 +363,21 @@ async function copyReexAll() {
     const date = reexState.date || '';
     const adresse = reexState.adresse || '';
 
-    // Phrase d'instruction selon le choix
+    // Paragraphe principal et instructions selon le choix
+    const isCOM = reexState.instruction === 'COM';
+    const phraseCorps = isCOM
+        ? "Nous vous adressons ce jour un titre exécutoire ainsi que les actes déjà délivrés dans le(s) dossier(s) référencé(s) ci-dessus dans le cadre de la réexécution, pour lesquels il convient de procéder à un commandement de payer afin d'interrompre la prescription."
+        : "Nous vous adressons ce jour un titre exécutoire ainsi que les actes déjà délivrés dans le(s) dossier(s) référencé(s) ci-dessus dans le cadre de la réexécution, pour lesquels il convient de procéder à une relance amiable.";
+
     const phraseInstruction = reexState.instruction === 'S ATT'
         ? "Sans réaction de sa part, nous vous invitons à procéder à une saisie-attribution."
         : "Sans réaction de sa part, nous vous invitons à reprendre les poursuites selon nos instructions.";
+
+    const blocEcheancierBrut = isCOM ? '' : `
+
+A réception du ou des dossiers, nous vous demandons donc de prendre contact avec le cotisant pour une proposition d'échéancier.
+
+${phraseInstruction}`;
 
     const texteTemplateBrut = `Date limite avant prescription : ${date}
 
@@ -366,11 +385,7 @@ Transmission de titres exécutoires
 
 Cher(s) Maître(s),
 
-Nous vous adressons ce jour un titre exécutoire ainsi que les actes déjà délivrés dans le(s) dossier(s) référencé(s) ci-dessus dans le cadre de la réexécution, pour lesquels il convient de procéder à une relance amiable.
-
-A réception du ou des dossiers, nous vous demandons donc de prendre contact avec le cotisant pour une proposition d'échéancier.
-
-${phraseInstruction}
+${phraseCorps}${blocEcheancierBrut}
 
 Adresse :
 ${adresse}
@@ -404,9 +419,9 @@ ${imagesHtml}
 <p><b>Date limite avant prescription :</b> <font color="red"><b>${date}</b></font></p>
 <p><b><u>Transmission de titres exécutoires</u></b></p>
 <p>Cher(s) Maître(s),</p>
-<p>Nous vous adressons ce jour un titre exécutoire ainsi que les actes déjà délivrés dans le(s) dossier(s) référencé(s) ci-dessus dans le cadre de la réexécution, pour lesquels il convient de procéder à une relance amiable.</p>
-<p>A réception du ou des dossiers, nous vous demandons donc de prendre contact avec le cotisant pour une proposition d'échéancier.</p>
-<p>${phraseInstruction}</p>
+<p>${phraseCorps}</p>
+${isCOM ? '' : `<p>A réception du ou des dossiers, nous vous demandons donc de prendre contact avec le cotisant pour une proposition d'échéancier.</p>
+<p>${phraseInstruction}</p>`}
 <p><b>Adresse :<br>${adresse.replace(/\n/g, '<br>')}</b></p>
 <p><b><u>IMPORTANT - PROCESSUS DE RÉEXÉCUTION PAR EDI - INSTRUCTIONS À SUIVRE</u></b></p>
 <p>Nous vous adressons en pièces jointes :<br>
